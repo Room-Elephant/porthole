@@ -1,0 +1,8 @@
+**/target
+**/node_modules
+**.class
+**.jar
+.git
+.idea
+.vscode
+.DS_Store

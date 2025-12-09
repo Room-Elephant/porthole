@@ -1,0 +1,35 @@
+# ====================================
+# SERVER - Maven + Spring Boot
+# ====================================
+
+# Maven build directory
+target/
+
+# Maven metadata files
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+
+# Java compiled files
+*.class
+hs_err_pid*
+
+# Build artifacts
+*.jar
+*.war
+*.ear
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Temporary files
+*.swp
+*.swo
+*~
