@@ -68,7 +68,7 @@ function ContainerTile({ container }) {
                     src={container.iconUrl}
                     alt={container.name}
                     className="container-icon"
-                    onError={(e) => { e.target.src = 'https://cdn.simpleicons.org/docker'; }} // Fallback
+                    onError={(e) => { e.target.src = 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/docker.webp'; }} // Fallback
                 />
                 <div className="container-info">
                     <h3>{container.name}</h3>
