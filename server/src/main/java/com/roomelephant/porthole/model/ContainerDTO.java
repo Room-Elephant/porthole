@@ -12,12 +12,14 @@ public class ContainerDTO {
     private String latestVersion;
     private boolean updateAvailable;
     private String project; // Docker Compose project name
+    private boolean hasPublicPorts; // Whether container has publicly mapped ports
 
     public ContainerDTO() {
     }
 
     public ContainerDTO(String id, String name, String image, List<Integer> exposedPorts, String iconUrl,
-            String currentVersion, String latestVersion, boolean updateAvailable, String project) {
+            String currentVersion, String latestVersion, boolean updateAvailable, String project,
+            boolean hasPublicPorts) {
         this.id = id;
         this.name = name;
         this.image = image;
@@ -27,6 +29,7 @@ public class ContainerDTO {
         this.latestVersion = latestVersion;
         this.updateAvailable = updateAvailable;
         this.project = project;
+        this.hasPublicPorts = hasPublicPorts;
     }
 
     public String getId() {
@@ -87,5 +90,13 @@ public class ContainerDTO {
 
     public void setProject(String project) {
         this.project = project;
+    }
+
+    public boolean isHasPublicPorts() {
+        return hasPublicPorts;
+    }
+
+    public void setHasPublicPorts(boolean hasPublicPorts) {
+        this.hasPublicPorts = hasPublicPorts;
     }
 }

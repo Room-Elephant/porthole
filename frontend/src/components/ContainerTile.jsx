@@ -3,6 +3,7 @@ import PortSelector from './PortSelector';
 
 function ContainerTile({ container }) {
     const [showConfig, setShowConfig] = useState(false);
+    const isDisabled = !container.hasPublicPorts;
 
     // Key for local storage
     const storageKey = `port_pref_${container.name}`;
@@ -13,6 +14,8 @@ function ContainerTile({ container }) {
     };
 
     const handleTileClick = () => {
+        if (isDisabled) return; // Don't do anything if disabled
+
         const preferredPort = localStorage.getItem(storageKey);
 
         if (preferredPort && container.exposedPorts.includes(parseInt(preferredPort))) {
@@ -31,6 +34,8 @@ function ContainerTile({ container }) {
 
     const handleConfigClick = (e) => {
         e.stopPropagation();
+        if (isDisabled) return; // Don't do anything if disabled
+
         if (container.exposedPorts.length > 1) {
             setShowConfig(true);
         } else {
@@ -50,13 +55,15 @@ function ContainerTile({ container }) {
 
     return (
         <>
-            <div className="card" onClick={handleTileClick}>
-                <button className="config-btn" onClick={handleConfigClick} title="Configure Port">
-                    <svg xmlns="http://www.w3.org/2001/XMLSchema" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l-.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15-.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                </button>
+            <div className={`card ${isDisabled ? 'disabled' : ''}`} onClick={handleTileClick}>
+                {!isDisabled && (
+                    <button className="config-btn" onClick={handleConfigClick} title="Configure Port">
+                        <svg xmlns="http://www.w3.org/2001/XMLSchema" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l-.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15-.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </button>
+                )}
                 <img
                     src={container.iconUrl}
                     alt={container.name}

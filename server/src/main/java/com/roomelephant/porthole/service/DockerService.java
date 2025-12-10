@@ -28,14 +28,14 @@ public class DockerService {
         this.registryService = registryService;
     }
 
-    public List<ContainerDTO> getRunningContainers() {
+    public List<ContainerDTO> getRunningContainers(boolean showAll) {
         List<Container> containers = dockerClient.listContainersCmd()
                 .withShowAll(false) // Only running
                 .exec();
 
         return containers.stream()
                 .map(this::mapToDTO)
-                .filter(dto -> !dto.getExposedPorts().isEmpty())
+                .filter(dto -> showAll || dto.isHasPublicPorts()) // Filter based on showAll parameter
                 .collect(Collectors.toList());
     }
 
@@ -62,6 +62,9 @@ public class DockerService {
         String latestVersion = registryService.getLatestVersion(imageFull);
         boolean updateAvailable = checkForUpdate(container, currentVersion, latestVersion);
 
+        // Determine if container has public ports
+        boolean hasPublicPorts = !ports.isEmpty();
+
         return new ContainerDTO(
                 container.getId(),
                 name,
@@ -71,7 +74,8 @@ public class DockerService {
                 currentVersion,
                 latestVersion,
                 updateAvailable,
-                project);
+                project,
+                hasPublicPorts);
     }
 
     private String getVersionFromContainer(Container container) {
