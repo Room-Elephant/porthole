@@ -1,5 +1,12 @@
 # Configuration
 
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/containers` | GET | Returns all containers. Supports `includeWithoutPorts` and `includeStopped` query params |
+| `/api/containers/{containerId}/version` | GET | Returns version info for a container (current version, latest version, update availability) |
+
 ## Health Check
 
 Porthole exposes a health endpoint via Spring Actuator:

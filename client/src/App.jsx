@@ -11,15 +11,19 @@ function App() {
     const saved = localStorage.getItem('porthole_showAll');
     return saved === 'true';
   });
+  const [showStopped, setShowStopped] = useState(() => {
+    const saved = localStorage.getItem('porthole_showStopped');
+    return saved === 'true';
+  });
 
   useEffect(() => {
     fetchContainers();
-  }, [showAll]); // Refetch when showAll changes
+  }, [showAll, showStopped]); // Refetch when toggles change
 
   const fetchContainers = async () => {
     try {
       // Use relative path for single JAR deployment
-      const response = await axios.get(`/api/containers?includeWithoutPorts=${showAll}`);
+      const response = await axios.get(`/api/containers?includeWithoutPorts=${showAll}&includeStopped=${showStopped}`);
       setContainers(response.data);
       setLoading(false);
     } catch (err) {
@@ -32,6 +36,11 @@ function App() {
   const handleToggleChange = (checked) => {
     setShowAll(checked);
     localStorage.setItem('porthole_showAll', checked.toString());
+  };
+
+  const handleShowStoppedChange = (checked) => {
+    setShowStopped(checked);
+    localStorage.setItem('porthole_showStopped', checked.toString());
   };
 
   // Group containers by project
@@ -62,6 +71,15 @@ function App() {
         <header className="app-header">
           <h1>Porthole</h1>
           <div className="controls">
+            <label className="toggle-switch">
+              <input
+                type="checkbox"
+                checked={showStopped}
+                onChange={(e) => handleShowStoppedChange(e.target.checked)}
+              />
+              <span className="toggle-slider"></span>
+              <span className="toggle-label">Show stopped containers</span>
+            </label>
             <label className="toggle-switch">
               <input
                 type="checkbox"

@@ -1,9 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import PortSelector from './PortSelector';
 
 function ContainerTile({ container }) {
     const [showConfig, setShowConfig] = useState(false);
+    const [versionInfo, setVersionInfo] = useState(null);
+    const [versionLoading, setVersionLoading] = useState(true);
     const isDisabled = !container.hasPublicPorts;
+
+    useEffect(() => {
+        const fetchVersionInfo = async () => {
+            try {
+                const response = await axios.get(`/api/containers/${container.id}/version`);
+                setVersionInfo(response.data);
+            } catch (err) {
+                console.error('Failed to fetch version info:', err);
+            } finally {
+                setVersionLoading(false);
+            }
+        };
+
+        fetchVersionInfo();
+    }, [container.id]);
+
+    // Determine status indicator color based on container state
+    const getStatusClass = () => {
+        const state = container.state?.toLowerCase();
+        if (state === 'running') return 'status-running';
+        if (state === 'paused' || state === 'restarting') return 'status-warning';
+        return 'status-stopped';
+    };
 
     // Key for local storage
     const storageKey = `port_pref_${container.name}`;
@@ -56,14 +82,20 @@ function ContainerTile({ container }) {
     return (
         <>
             <div className={`card ${isDisabled ? 'disabled' : ''}`} onClick={handleTileClick}>
-                {!isDisabled && (
-                    <button className="config-btn" onClick={handleConfigClick} title="Configure Port">
-                        <svg xmlns="http://www.w3.org/2001/XMLSchema" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l-.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15-.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                    </button>
-                )}
+                <div className="card-actions">
+                    <span 
+                        className={`status-indicator ${getStatusClass()}`} 
+                        title={container.status || container.state}
+                    ></span>
+                    {!isDisabled && (
+                        <button className="config-btn" onClick={handleConfigClick} title="Configure Port">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l-.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15-.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    )}
+                </div>
                 <img
                     src={container.name.includes("porthole") ? "porthole.png" : container.iconUrl}
                     alt={container.name}
@@ -73,8 +105,13 @@ function ContainerTile({ container }) {
                 <div className="container-info">
                     <h3>{container.name}</h3>
                     <p className="container-image">
-                        {container.updateAvailable && (
-                            <span className="update-warning" title={`Update available: ${container.latestVersion}`}>
+                        {versionLoading && (
+                            <span className="version-loading" title="Checking for updates...">
+                                ...
+                            </span>
+                        )}
+                        {!versionLoading && versionInfo?.updateAvailable && (
+                            <span className="update-warning" title={`Update available: ${versionInfo.latestVersion}`}>
                                 ⚠️
                             </span>
                         )}

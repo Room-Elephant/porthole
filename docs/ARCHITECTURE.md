@@ -27,6 +27,20 @@ We use a "Client-First" build strategy integrated into Maven:
 
 This allows the final Docker image to just run `java -jar app.jar` without needing Node.js or a separate web server (Nginx) in the runtime container.
 
+## Container Status
+
+Each container displays a status indicator (semaphore) in the top-right corner:
+
+- **Green**: Container is running
+- **Yellow**: Container is paused or restarting
+- **Red**: Container is stopped, exited, or dead
+
+Hovering over the indicator shows the full status (e.g., "Up 2 hours", "Exited (0) 3 days ago").
+
+The UI provides toggles to:
+- **Show stopped containers**: Include non-running containers (equivalent to `docker ps -a`)
+- **Show containers without ports**: Include containers without exposed ports
+
 ## Version Detection
 
 Porthole attempts to detect the current version of each container using multiple strategies (in priority order):
