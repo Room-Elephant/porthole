@@ -25,7 +25,7 @@ COPY frontend ./frontend
 
 # Build the application
 WORKDIR /app/server
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests -Pbuild-frontend
 
 # Stage 2: Runtime
 FROM eclipse-temurin:21-jre-alpine

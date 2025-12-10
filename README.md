@@ -44,18 +44,55 @@ Porthole is a **Single JAR** application. The React frontend is built and bundle
 ### Prerequisites
 - Java 21+
 - Maven
-- Docker
+- Node.js 20+ and npm (for frontend-only development)
+- Docker (for containerized builds)
 
 ### Building from Source
 
+#### Build Backend Only
+Build just the Spring Boot backend without the frontend:
 ```bash
-# Clean and Build (Frontend + Backend)
 cd server
-mvn clean package
-
-# Run Locally
-java -jar target/porthole-0.0.1-SNAPSHOT.jar
+mvn clean package -DskipTests
 ```
+The JAR will be in `server/target/porthole-0.0.1-SNAPSHOT.jar` but won't include frontend assets.
+
+#### Build Frontend Only
+Build just the React frontend:
+```bash
+cd frontend
+npm install
+npm run build
+```
+The built frontend will be in `frontend/dist/`.
+
+#### Build Backend + Frontend (Complete Application)
+Build the complete application with frontend bundled into the backend JAR:
+```bash
+cd server
+mvn clean package -DskipTests -Pbuild-frontend
+```
+The frontend will be automatically built and copied into the JAR's static resources.
+
+#### Build Docker Image
+Build the containerized application:
+```bash
+# From the project root
+docker build -t porthole:latest .
+```
+The Dockerfile uses a multi-stage build that automatically builds both frontend and backend.
+
+### Running Locally
+
+```bash
+# Run the JAR directly
+java -jar server/target/porthole-0.0.1-SNAPSHOT.jar
+
+# Or run with Docker
+docker run -p 9753:9753 -v /var/run/docker.sock:/var/run/docker.sock porthole:latest
+```
+
+Access the application at `http://localhost:9753`
 
 See [Architecture Documentation](docs/ARCHITECTURE.md) for more details on the tech stack.
 
