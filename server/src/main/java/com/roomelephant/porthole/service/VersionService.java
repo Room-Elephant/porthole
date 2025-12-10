@@ -1,12 +1,15 @@
 package com.roomelephant.porthole.service;
 
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.model.Container;
+import com.github.dockerjava.api.command.InspectContainerResponse;
+import com.github.dockerjava.api.model.ContainerConfig;
 import com.roomelephant.porthole.model.VersionDTO;
 import com.roomelephant.porthole.util.ImageUtils;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -26,71 +29,58 @@ public class VersionService {
     }
 
     public @NonNull VersionDTO getVersionInfo(@NonNull String containerId) {
-        Container container = findContainerById(containerId);
-        if (container == null) {
+        InspectContainerResponse container;
+        try {
+            container = dockerClient.inspectContainerCmd(containerId).exec();
+        } catch (Exception _) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Container not found: " + containerId);
+        }
+
+        var config = container.getConfig();
+        if (config == null || config.getImage() == null) {
             return new VersionDTO(null, null, false);
         }
 
-        String imageFull = container.getImage();
+        String imageFull = config.getImage();
 
-        // Get repoDigests to detect local images (no RepoDigests = locally built)
-        List<String> repoDigests = getRepoDigests(container);
+        List<String> repoDigests = getRepoDigests(container.getImageId());
         boolean isLocalImage = repoDigests == null || repoDigests.isEmpty();
 
-        String currentVersion = getVersionFromContainer(container);
+        String currentVersion = getVersionFromContainer(config, imageFull);
 
         if (isLocalImage) {
             return new VersionDTO(currentVersion, null, false);
         }
 
         String latestVersion = registryService.getLatestVersion(imageFull);
-        boolean updateAvailable = checkForUpdate(container, currentVersion, latestVersion, repoDigests);
+        boolean updateAvailable = checkForUpdate(imageFull, currentVersion, latestVersion, repoDigests);
 
         return new VersionDTO(currentVersion, latestVersion, updateAvailable);
     }
 
-    private @Nullable Container findContainerById(@NonNull String containerId) {
+    private @Nullable List<String> getRepoDigests(@NonNull String imageId) {
         try {
-            List<Container> containers = dockerClient.listContainersCmd()
-                    .withShowAll(true)
-                    .exec();
-            return containers.stream()
-                    .filter(c -> c.getId().equals(containerId))
-                    .findFirst()
-                    .orElse(null);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private @Nullable List<String> getRepoDigests(@NonNull Container container) {
-        try {
-            var inspectImage = dockerClient.inspectImageCmd(container.getImageId()).exec();
+            var inspectImage = dockerClient.inspectImageCmd(imageId).exec();
             return inspectImage.getRepoDigests();
-        } catch (Exception e) {
+        } catch (Exception _) {
             return null;
         }
     }
 
-    private String getVersionFromContainer(@NonNull Container container) {
-        try {
-            var inspect = dockerClient.inspectContainerCmd(container.getId()).exec();
-            String imageName = ImageUtils.extractName(container.getImage());
+    private String getVersionFromContainer(@NonNull ContainerConfig config, @NonNull String imageFull) {
+        String imageName = ImageUtils.extractName(imageFull);
 
-            String envVersion = getVersionFromEnvVars(inspect.getConfig().getEnv(), imageName);
-            if (envVersion != null) {
-                return envVersion;
-            }
-
-            String labelVersion = getVersionFromLabels(inspect.getConfig().getLabels());
-            if (labelVersion != null) {
-                return labelVersion;
-            }
-        } catch (Exception e) {
-            // Ignore inspect failures
+        String envVersion = getVersionFromEnvVars(config.getEnv(), imageName);
+        if (envVersion != null) {
+            return envVersion;
         }
 
-        return ImageUtils.extractTag(container.getImage());
+        String labelVersion = getVersionFromLabels(config.getLabels());
+        if (labelVersion != null) {
+            return labelVersion;
+        }
+
+        return ImageUtils.extractTag(imageFull);
     }
 
     private String getVersionFromEnvVars(String @Nullable [] envs, @NonNull String imageName) {
@@ -102,10 +92,16 @@ public class VersionService {
 
         for (String env : envs) {
             if (env.startsWith(targetEnv)) {
-                return env.split("=")[1];
+                String[] parts = env.split("=", 2);
+                if (parts.length > 1 && !parts[1].isEmpty()) {
+                    return parts[1];
+                }
             }
             if (env.startsWith("VERSION=")) {
-                return env.split("=")[1];
+                String[] parts = env.split("=", 2);
+                if (parts.length > 1 && !parts[1].isEmpty()) {
+                    return parts[1];
+                }
             }
         }
         return null;
@@ -124,8 +120,7 @@ public class VersionService {
         return null;
     }
 
-    private boolean checkForUpdate(@NonNull Container container, @Nullable String currentVersion, @Nullable String latestVersion, @NonNull List<String> repoDigests) {
-        String imageFull = container.getImage();
+    private boolean checkForUpdate(@NonNull String imageFull, @Nullable String currentVersion, @Nullable String latestVersion, @NonNull List<String> repoDigests) {
         String tag = ImageUtils.extractTag(imageFull);
 
         try {
