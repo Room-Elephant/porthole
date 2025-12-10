@@ -1,4 +1,5 @@
 {
   "mongo": "mongodb",
-  "postgres": "postgresql"
+  "postgres": "postgresql",
+  "cassandra": "apache-cassandra"
 }
