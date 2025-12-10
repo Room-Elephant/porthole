@@ -1,4 +1,4 @@
 {
-  "mongo": "mongodb",
+  "traefik": "traefikproxy",
   "postgres": "postgresql"
 }
