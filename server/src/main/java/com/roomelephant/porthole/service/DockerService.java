@@ -50,6 +50,13 @@ public class DockerService {
 
         String iconUrl = resolveIconUrl(imageFull);
 
+        // Extract Docker Compose project label
+        Map<String, String> labels = container.getLabels();
+        String project = null;
+        if (labels != null) {
+            project = labels.get("com.docker.compose.project");
+        }
+
         // Version Detection logic
         String currentVersion = getVersionFromContainer(container);
         String latestVersion = registryService.getLatestVersion(imageFull);
@@ -63,7 +70,8 @@ public class DockerService {
                 iconUrl,
                 currentVersion,
                 latestVersion,
-                updateAvailable);
+                updateAvailable,
+                project);
     }
 
     private String getVersionFromContainer(Container container) {

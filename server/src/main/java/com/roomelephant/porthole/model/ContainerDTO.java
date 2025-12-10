@@ -8,16 +8,16 @@ public class ContainerDTO {
     private String image;
     private List<Integer> exposedPorts;
     private String iconUrl;
+    private String currentVersion;
+    private String latestVersion;
+    private boolean updateAvailable;
+    private String project; // Docker Compose project name
 
     public ContainerDTO() {
     }
 
-    private String currentVersion;
-    private String latestVersion;
-    private boolean updateAvailable;
-
     public ContainerDTO(String id, String name, String image, List<Integer> exposedPorts, String iconUrl,
-            String currentVersion, String latestVersion, boolean updateAvailable) {
+            String currentVersion, String latestVersion, boolean updateAvailable, String project) {
         this.id = id;
         this.name = name;
         this.image = image;
@@ -26,6 +26,7 @@ public class ContainerDTO {
         this.currentVersion = currentVersion;
         this.latestVersion = latestVersion;
         this.updateAvailable = updateAvailable;
+        this.project = project;
     }
 
     public String getId() {
@@ -78,5 +79,13 @@ public class ContainerDTO {
 
     public void setIconUrl(String iconUrl) {
         this.iconUrl = iconUrl;
+    }
+
+    public String getProject() {
+        return project;
+    }
+
+    public void setProject(String project) {
+        this.project = project;
     }
 }

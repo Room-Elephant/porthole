@@ -46,6 +46,20 @@ h1 {
   width: 100%;
 }
 
+.project-section {
+  margin-bottom: 3rem;
+}
+
+.project-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #334155;
+  text-transform: capitalize;
+}
+
 .card {
   background-color: #1e293b;
   border: 1px solid #334155;

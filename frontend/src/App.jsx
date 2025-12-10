@@ -24,8 +24,24 @@ function App() {
     }
   };
 
+  // Group containers by project
+  const groupByProject = (containers) => {
+    const groups = {};
+    containers.forEach(container => {
+      const project = container.project || 'Standalone';
+      if (!groups[project]) {
+        groups[project] = [];
+      }
+      groups[project].push(container);
+    });
+    return groups;
+  };
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div style={{ color: 'red' }}>{error}</div>;
+
+  const groupedContainers = groupByProject(containers);
+  const projectNames = Object.keys(groupedContainers).sort();
 
   return (
     <div>
@@ -33,11 +49,16 @@ function App() {
         <header className="app-header">
           <h1>Porthole</h1>
         </header>
-        <div className="container-grid">
-          {containers.map(container => (
-            <ContainerTile key={container.id} container={container} />
-          ))}
-        </div>
+        {projectNames.map(projectName => (
+          <div key={projectName} className="project-section">
+            <h2 className="project-title">{projectName}</h2>
+            <div className="container-grid">
+              {groupedContainers[projectName].map(container => (
+                <ContainerTile key={container.id} container={container} />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
