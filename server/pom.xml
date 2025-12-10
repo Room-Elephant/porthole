@@ -12,7 +12,7 @@
     <artifactId>porthole</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>porthole</name>
-    <description>Docker Dashboard (Porthole)</description>
+    <description>A modern, lightweight dashboard for your local Docker containers.</description>
     <properties>
         <java.version>21</java.version>
     </properties>
@@ -64,7 +64,7 @@
 
     <profiles>
         <profile>
-            <id>build-frontend</id>
+            <id>build-client</id>
             <build>
                 <plugins>
                     <plugin>
@@ -72,7 +72,7 @@
                         <artifactId>frontend-maven-plugin</artifactId>
                         <version>1.15.0</version>
                         <configuration>
-                            <workingDirectory>../frontend</workingDirectory>
+                            <workingDirectory>../client</workingDirectory>
                             <installDirectory>target</installDirectory>
                         </configuration>
                         <executions>
@@ -120,7 +120,7 @@
                                     <outputDirectory>${basedir}/target/classes/static</outputDirectory>
                                     <resources>
                                         <resource>
-                                            <directory>../frontend/dist</directory>
+                                            <directory>../client/dist</directory>
                                         </resource>
                                     </resources>
                                 </configuration>

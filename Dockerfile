@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Copy dependency files first (these change less frequently)
 COPY server/pom.xml ./server/
-COPY frontend/package.json frontend/package-lock.json ./frontend/
+COPY client/package.json client/package-lock.json ./client/
 
 # Download Maven dependencies (this layer will be cached)
 WORKDIR /app/server
@@ -15,17 +15,17 @@ RUN mvn dependency:go-offline -B
 RUN apk add --no-cache nodejs npm
 
 # Install npm dependencies (this layer will be cached)
-WORKDIR /app/frontend
+WORKDIR /app/client
 RUN npm ci
 
 # Copy source code
 WORKDIR /app
 COPY server/src ./server/src
-COPY frontend ./frontend
+COPY client ./client
 
 # Build the application
 WORKDIR /app/server
-RUN mvn clean package -DskipTests -Pbuild-frontend
+RUN mvn clean package -DskipTests -Pbuild-client
 
 # Stage 2: Runtime
 FROM eclipse-temurin:21-jre-alpine

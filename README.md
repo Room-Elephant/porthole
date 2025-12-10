@@ -39,40 +39,40 @@ See [Configuration Documentation](docs/CONFIGURATION.md) for details.
 
 ## Development
 
-Porthole is a **Single JAR** application. The React frontend is built and bundled into the Spring Boot backend during the Maven build process.
+Porthole is a **Single JAR** application. The React client is built and bundled into the Spring Boot backend during the Maven build process.
 
 ### Prerequisites
 - Java 21+
 - Maven
-- Node.js 20+ and npm (for frontend-only development)
+- Node.js 20+ and npm (for client-only development)
 - Docker (for containerized builds)
 
 ### Building from Source
 
 #### Build Backend Only
-Build just the Spring Boot backend without the frontend:
+Build just the Spring Boot backend without the client:
 ```bash
 cd server
 mvn clean package -DskipTests
 ```
-The JAR will be in `server/target/porthole-0.0.1-SNAPSHOT.jar` but won't include frontend assets.
+The JAR will be in `server/target/porthole-0.0.1-SNAPSHOT.jar` but won't include client assets.
 
-#### Build Frontend Only
-Build just the React frontend:
+#### Build Client Only
+Build just the React client:
 ```bash
-cd frontend
+cd client
 npm install
 npm run build
 ```
-The built frontend will be in `frontend/dist/`.
+The built client will be in `client/dist/`.
 
-#### Build Backend + Frontend (Complete Application)
-Build the complete application with frontend bundled into the backend JAR:
+#### Build Backend + Client (Complete Application)
+Build the complete application with client bundled into the backend JAR:
 ```bash
 cd server
-mvn clean package -DskipTests -Pbuild-frontend
+mvn clean package -DskipTests -Pbuild-client
 ```
-The frontend will be automatically built and copied into the JAR's static resources.
+The client will be automatically built and copied into the JAR's static resources.
 
 #### Build Docker Image
 Build the containerized application:
@@ -80,7 +80,7 @@ Build the containerized application:
 # From the project root
 docker build -t porthole:latest .
 ```
-The Dockerfile uses a multi-stage build that automatically builds both frontend and backend.
+The Dockerfile uses a multi-stage build that automatically builds both client and backend.
 
 ### Running Locally
 
