@@ -4,13 +4,14 @@
 
 ![Porthole Screenshot](docs/images/screenshot.png)
 
-Porthole automatically discovers your running Docker containers and provides a beautiful, clean interface to access them. It resolves container icons automatically using [SimpleIcons](https://simpleicons.org/) and allows you to quickly jump to exposed ports.
+Porthole automatically discovers your running Docker containers and provides a beautiful, clean interface to access them. It resolves container icons automatically using [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons) and allows you to quickly jump to exposed ports.
 
 ## Features
 
 - 🕵️‍♂️ **Auto-Discovery**: Automatically lists all running containers with exposed ports.
-- 🎨 **Automated Icons**: Mentally maps container image names to icons (e.g., `redis` -> Redis Icon).
-- 🌓 **Modern UI**: Sleek, dark-mode interface built with React and Vanilla CSS.
+- 🎨 **Automated Icons**: Maps container image names to icons (e.g., `redis` → Redis icon).
+- 🔄 **Update Detection**: Checks Docker Hub for newer image versions and digest changes.
+- 📦 **Compose Grouping**: Groups containers by Docker Compose project.
 - 🔌 **Port Selection**: Remembers your preferred port for containers exposing multiple ports.
 - 🐳 **Docker Native**: Runs as a single, lightweight Docker container.
 - 🛠 **Customizable**: Override icon mappings via a simple JSON configuration.
@@ -21,7 +22,7 @@ Run Porthole with a single Docker command:
 
 ```bash
 docker run -d \
-  -p 8080:8080 \
+  -p 9753:9753 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   --name porthole \
   porthole
@@ -29,7 +30,7 @@ docker run -d \
 
 **Note**: Mounting `/var/run/docker.sock` is required for Porthole to see your other containers.
 
-Open [http://localhost:8080](http://localhost:8080) to view your dashboard.
+Open [http://localhost:9753](http://localhost:9753) to view your dashboard.
 
 ## Configuration
 
@@ -42,7 +43,7 @@ See [Configuration Documentation](docs/CONFIGURATION.md) for details.
 Porthole is a **Single JAR** application. The React client is built and bundled into the Spring Boot backend during the Maven build process.
 
 ### Prerequisites
-- Java 21+
+- Java 25+
 - Maven
 - Node.js 20+ and npm (for client-only development)
 - Docker (for containerized builds)

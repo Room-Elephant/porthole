@@ -1,0 +1,39 @@
+server:
+  port: 9753
+
+spring:
+  application:
+    name: porthole
+  threads:
+    virtual:
+      enabled: true
+
+# Docker configuration
+docker:
+  host: unix:///var/run/docker.sock
+
+# Icon configuration
+dashboard:
+  icons:
+    path: /app/config/icons.json
+    url: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp
+    extension: .webp
+
+# Registry configuration
+registry:
+  timeout:
+    connect: 5s
+    read: 10s
+  cache:
+    ttl: 1h
+
+# Actuator configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+

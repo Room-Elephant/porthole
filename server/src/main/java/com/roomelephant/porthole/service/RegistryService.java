@@ -1,133 +1,130 @@
 package com.roomelephant.porthole.service;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.roomelephant.porthole.util.ImageUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
 
 @Service
+@Slf4j
 public class RegistryService {
 
-    private final RestTemplate restTemplate = new RestTemplate();
-    private final Map<String, String> cache = new ConcurrentHashMap<>();
-    private static final Pattern SEMVER_PATTERN = Pattern.compile("^v?\\d+(\\.\\d+)+$");
+    private static final String REGISTRY_URL = "https://registry-1.docker.io/v2/";
+    private static final String REGISTRY_URL_MANIFESTS = "/manifests/";
+    private static final String AUTH_URL = "https://auth.docker.io/token?service=registry.docker.io&scope=repository:";
+    private static final String AUTH_URL_PULL = ":pull";
+    private static final String REPOSITORIES_URL = "https://hub.docker.com/v2/repositories/";
+    private static final String REPOSITORIES_URL_TAGS = "/tags?page_size=100";
+    private static final String BEARER = "Bearer ";
+    private static final String TOKEN = "token";
+    private static final String ACCEPT_HEADER = "application/vnd.docker.distribution.manifest.v2+json";
+    private static final String DOCKER_CONTENT_DIGEST = "Docker-Content-Digest";
+    private static final String RESULTS = "results";
+    private static final String NAME = "name";
 
-    public String getDigest(String imageName, String tag) {
+    private final RestClient restClient;
+    private final Cache<String, String> versionCache;
+
+    public RegistryService(RestClient restClient, @Value("${registry.cache.ttl}") Duration cacheTtl) {
+        this.restClient = restClient;
+        this.versionCache = Caffeine.newBuilder()
+                .expireAfterWrite(cacheTtl)
+                .maximumSize(100)
+                .build();
+    }
+
+    public @Nullable String getDigest(@NonNull String imageName, String tag) {
         try {
-            String repository = resolveRepository(imageName);
+            String repository = ImageUtils.resolveRepository(imageName);
             String token = fetchAuthToken(repository);
 
             if (token == null)
                 return null;
 
-            String url = "https://registry-1.docker.io/v2/" + repository + "/manifests/" + tag;
-
-            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-            headers.setBearerAuth(token);
-            headers.set("Accept", "application/vnd.docker.distribution.manifest.v2+json");
-
-            org.springframework.http.HttpEntity<String> entity = new org.springframework.http.HttpEntity<>(headers);
-
-            var response = restTemplate.exchange(url, org.springframework.http.HttpMethod.HEAD, entity, Void.class);
-            return response.getHeaders().getFirst("Docker-Content-Digest");
-
+            return fetchDigest(tag, repository, token);
         } catch (Exception e) {
-            System.err.println("Failed to fetch digest for " + imageName + ":" + tag + " - " + e.getMessage());
+            log.warn("Failed to fetch digest for {}:{} - {}", imageName, tag, e.getMessage());
             return null;
         }
     }
 
-    private String fetchAuthToken(String repository) {
+    public @Nullable String getLatestVersion(@NonNull String imageName) {
         try {
-            String url = "https://auth.docker.io/token?service=registry.docker.io&scope=repository:" + repository
-                    + ":pull";
-            JsonNode response = restTemplate.getForObject(url, JsonNode.class);
-            return response != null && response.has("token") ? response.get("token").asText() : null;
+            return versionCache.get(imageName, this::fetchLatestVersion);
         } catch (Exception e) {
-            System.err.println("Failed to fetch auth token for " + repository);
+            log.warn("Failed to fetch tags for {}: {}", imageName, e.getMessage());
             return null;
         }
     }
 
-    private String resolveRepository(String imageName) {
-        String repository = imageName.contains("/") ? imageName : "library/" + imageName;
-        if (repository.contains(":")) {
-            repository = repository.substring(0, repository.indexOf(":"));
-        }
-        return repository;
+    private @Nullable String fetchLatestVersion(String imageName) {
+        String repository = ImageUtils.resolveRepository(imageName);
+        return fetchLatestFromHub(repository);
     }
 
-    public String getLatestVersion(String imageName) {
-        if (cache.containsKey(imageName)) {
-            return cache.get(imageName);
-        }
+    private @Nullable String fetchDigest(String tag, String repository, String token) {
+        String url = REGISTRY_URL + repository + REGISTRY_URL_MANIFESTS + tag;
 
+        var response = restClient.head()
+                .uri(url)
+                .header(HttpHeaders.AUTHORIZATION, BEARER + token)
+                .header(HttpHeaders.ACCEPT, ACCEPT_HEADER)
+                .retrieve()
+                .toBodilessEntity();
+
+        return response.getHeaders().getFirst(DOCKER_CONTENT_DIGEST);
+    }
+
+    private @Nullable String fetchAuthToken(String repository) {
         try {
-            // Handle official library images (e.g., "mongo" -> "library/mongo")
-            String repository = resolveRepository(imageName);
-            // Remove tag if present for the API call
-            if (repository.contains(":")) {
-                repository = repository.substring(0, repository.indexOf(":"));
-            }
-
-            String url = "https://hub.docker.com/v2/repositories/" + repository + "/tags?page_size=100";
-            String latest = fetchLatestFromHub(url);
-
-            if (latest != null) {
-                cache.put(imageName, latest);
-            }
-            return latest;
-
+            String url = AUTH_URL + repository + AUTH_URL_PULL;
+            JsonNode response = restClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .body(JsonNode.class);
+            return response != null && response.has(TOKEN) ? response.get(TOKEN).asText() : null;
         } catch (Exception e) {
-            System.err.println("Failed to fetch tags for " + imageName + ": " + e.getMessage());
+            log.warn("Failed to fetch auth token for {}: {}", repository, e.getMessage());
             return null;
         }
     }
 
-    private String fetchLatestFromHub(String url) {
+    private @Nullable String fetchLatestFromHub(String repository) {
+        String url = REPOSITORIES_URL + repository + REPOSITORIES_URL_TAGS;
         try {
-            JsonNode response = restTemplate.getForObject(url, JsonNode.class);
-            if (response == null || !response.has("results"))
+            JsonNode response = restClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .body(JsonNode.class);
+            if (response == null || !response.has(RESULTS))
                 return null;
 
             List<String> tags = new ArrayList<>();
-            for (JsonNode result : response.get("results")) {
-                String name = result.get("name").asText();
-                if (SEMVER_PATTERN.matcher(name).matches()) {
+            for (JsonNode result : response.get(RESULTS)) {
+                String name = result.get(NAME).asText();
+                if (ImageUtils.isSemver(name)) {
                     tags.add(name);
                 }
             }
 
-            // Simple semantic sort
-            tags.sort(this::compareSemVer);
+            tags.sort(ImageUtils::compareSemVer);
             if (tags.isEmpty())
                 return null;
 
-            return tags.get(tags.size() - 1); // Return the highest version
-        } catch (Exception e) {
+            return tags.getLast();
+        } catch (Exception _) {
             return null;
         }
-    }
-
-    private int compareSemVer(String v1, String v2) {
-        String[] parts1 = v1.replaceAll("^v", "").split("\\.");
-        String[] parts2 = v2.replaceAll("^v", "").split("\\.");
-        int length = Math.max(parts1.length, parts2.length);
-
-        for (int i = 0; i < length; i++) {
-            int num1 = i < parts1.length ? Integer.parseInt(parts1[i]) : 0;
-            int num2 = i < parts2.length ? Integer.parseInt(parts2[i]) : 0;
-            if (num1 != num2) {
-                return num1 - num2;
-            }
-        }
-        return 0;
     }
 }

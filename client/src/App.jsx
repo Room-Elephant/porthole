@@ -19,7 +19,7 @@ function App() {
   const fetchContainers = async () => {
     try {
       // Use relative path for single JAR deployment
-      const response = await axios.get(`/api/containers?showAll=${showAll}`);
+      const response = await axios.get(`/api/containers?includeWithoutPorts=${showAll}`);
       setContainers(response.data);
       setLoading(false);
     } catch (err) {

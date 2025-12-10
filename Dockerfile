@@ -1,5 +1,5 @@
 # Stage 1: Build with dependency caching
-FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
+FROM maven:3.9-eclipse-temurin-25-alpine AS build
 
 WORKDIR /app
 
@@ -23,12 +23,22 @@ WORKDIR /app
 COPY server/src ./server/src
 COPY client ./client
 
-# Build the application
+# Build the frontend
+WORKDIR /app/client
+RUN npm run build
+
+# Build the backend (without frontend profile - we built it manually above)
 WORKDIR /app/server
-RUN mvn clean package -DskipTests -Pbuild-client
+RUN mvn clean package -DskipTests
+
+# Copy frontend dist into the JAR's static resources
+RUN mkdir -p target/classes/static && \
+    cp -r ../client/dist/* target/classes/static/ && \
+    cd target && \
+    jar uf porthole-0.0.1-SNAPSHOT.jar -C classes static
 
 # Stage 2: Runtime
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 
 WORKDIR /app
 
@@ -36,7 +46,11 @@ WORKDIR /app
 COPY --from=build /app/server/target/porthole-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose the port
-EXPOSE 8080
+EXPOSE 9753
+
+# Health check using Spring Actuator
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:9753/actuator/health || exit 1
 
 # Run the application
 CMD ["java", "-jar", "app.jar"]

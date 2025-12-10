@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*") // Allow all for simplicity in dev
+@CrossOrigin(origins = "*")
 public class ContainerController {
 
     private final DockerService dockerService;
@@ -22,7 +22,9 @@ public class ContainerController {
     }
 
     @GetMapping("/containers")
-    public List<ContainerDTO> getContainers(@RequestParam(defaultValue = "false") boolean showAll) {
-        return dockerService.getRunningContainers(showAll);
+    public List<ContainerDTO> getContainers(
+            @RequestParam(defaultValue = "false") boolean includeWithoutPorts,
+            @RequestParam(defaultValue = "false") boolean includeStopped) {
+        return dockerService.getContainers(includeWithoutPorts, includeStopped);
     }
 }

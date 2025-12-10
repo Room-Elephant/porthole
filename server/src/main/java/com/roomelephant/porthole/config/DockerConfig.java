@@ -6,16 +6,20 @@ import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.zerodep.ZerodepDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class DockerConfig {
 
+    @Value("${docker.host}")
+    private String dockerHost;
+
     @Bean
     public DockerClient dockerClient() {
         DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-                .withDockerHost("unix:///var/run/docker.sock") // Try standard path again with zerodep, usually works
+                .withDockerHost(dockerHost)
                 .build();
 
         DockerHttpClient httpClient = new ZerodepDockerHttpClient.Builder()

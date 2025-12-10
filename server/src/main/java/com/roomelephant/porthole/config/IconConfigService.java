@@ -3,6 +3,8 @@ package com.roomelephant.porthole.config;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
@@ -14,67 +16,65 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class IconConfigService {
 
-    @Value("${dashboard.icons.path:/app/config/icons.json}")
+    @Value("${dashboard.icons.path}")
     private String externalConfigPath;
 
-    private Map<String, String> customMappings = new HashMap<>();
+    @Value("${dashboard.icons.url}")
+    private String iconsBaseUrl;
+
+    @Value("${dashboard.icons.extension}")
+    private String iconsExtension;
+
+    private final Map<String, String> customMappings = new HashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostConstruct
     public void loadConfigurations() {
-        // 1. Load custom mappings from classpath
         try {
             ClassPathResource resource = new ClassPathResource("icons.json");
             if (resource.exists()) {
                 try (InputStream inputStream = resource.getInputStream()) {
-                    Map<String, String> defaults = objectMapper.readValue(inputStream,
-                            new TypeReference<Map<String, String>>() {
-                            });
+                    Map<String, String> defaults = objectMapper.readValue(inputStream, new TypeReference<>() {
+                    });
                     customMappings.putAll(defaults);
                 }
             }
-        } catch (IOException e) {
-            System.err.println("Could not load default icons.json: " + e.getMessage());
+        } catch (IOException _) {
+            // Should not happen
         }
 
-        // 2. Load external custom mappings (overrides defaults)
         File externalFile = new File(externalConfigPath);
         if (externalFile.exists()) {
             try {
-                Map<String, String> external = objectMapper.readValue(externalFile,
-                        new TypeReference<Map<String, String>>() {
-                        });
+                Map<String, String> external = objectMapper.readValue(externalFile, new TypeReference<>() {
+                });
                 customMappings.putAll(external);
-                System.out.println("Loaded external icon config from " + externalConfigPath);
+                log.debug("Loaded external icon config from {}", externalConfigPath);
             } catch (IOException e) {
-                System.err.println("Failed to load external icon config: " + e.getMessage());
+                log.error("Failed to load external icon config: {}", e.getMessage());
             }
-        } else {
-            System.out.println("No external icon config found at " + externalConfigPath);
         }
 
-        System.out.println("Icon service initialized with " + customMappings.size() + " custom mappings");
+        log.debug("Icon service initialized with {} custom mappings", customMappings.size());
     }
 
-    public String resolveIcon(String imageName) {
-        // 1. Check custom mappings first (highest priority)
+    public @NonNull String resolveIcon(@NonNull String imageName) {
         if (customMappings.containsKey(imageName)) {
             return buildDashboardIconsUrl(customMappings.get(imageName));
         }
 
-        // 2. Sanitize and use image name directly
         String iconName = sanitizeIconName(imageName);
         return buildDashboardIconsUrl(iconName);
     }
 
-    private String sanitizeIconName(String name) {
-        // Convert to lowercase kebab-case
-        return name.toLowerCase().replaceAll("_", "-");
+    private @NonNull String sanitizeIconName(@NonNull String name) {
+        return name.toLowerCase().replace('_', '-');
     }
 
-    private String buildDashboardIconsUrl(String iconName) {
-        return "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/" + iconName + ".webp";
+    private @NonNull String buildDashboardIconsUrl(String iconName) {
+        return iconsBaseUrl + "/" + iconName + iconsExtension;
     }
 }
