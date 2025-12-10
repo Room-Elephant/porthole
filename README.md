@@ -1,5 +1,7 @@
 # Porthole ⚓️
 
+![Porthole](client/public/porthole.png)
+
 > A modern, lightweight dashboard for your local Docker containers.
 
 ![Porthole Screenshot](docs/images/screenshot.png)

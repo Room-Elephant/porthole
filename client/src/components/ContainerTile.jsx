@@ -65,7 +65,7 @@ function ContainerTile({ container }) {
                     </button>
                 )}
                 <img
-                    src={container.iconUrl}
+                    src={container.name.includes("porthole") ? "porthole.png" : container.iconUrl}
                     alt={container.name}
                     className="container-icon"
                     onError={(e) => { e.target.src = 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/docker.webp'; }} // Fallback
