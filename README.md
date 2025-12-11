@@ -49,8 +49,8 @@ Porthole is a **Single JAR** application. The React client is built and bundled 
 ### Prerequisites
 - Java 25+
 - Maven
-- Node.js 20+ and npm (for client-only development)
-- Docker (for containerized builds)
+- Node.js 24+ and npm
+- Docker
 
 ### Building from Source
 
