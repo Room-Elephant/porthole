@@ -1,11 +1,14 @@
 import { useState, memo, lazy, Suspense } from 'react';
 import { Settings, Loader2 } from 'lucide-react';
-
-const ContainerSettings = lazy(() => import('./ContainerSettings'));
 import { useContainerVersion } from '../hooks/useContainerVersion';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { STORAGE_KEYS, ASSETS } from '../constants';
 import { getTargetUrl } from '../utils/containers';
+
+const ContainerSettings = lazy(() => import('./ContainerSettings'));
+
+const arraysEqual = (a, b) => 
+    a.length === b.length && a.every((v, i) => v === b[i]);
 
 function ContainerTile({ container }) {
     const [showConfig, setShowConfig] = useState(false);
@@ -65,6 +68,7 @@ function ContainerTile({ container }) {
                     src={container.name.includes("porthole") ? ASSETS.PORTHOLE_ICON : container.iconUrl}
                     alt={container.name}
                     className="container-icon"
+                    loading="lazy"
                     onError={(e) => { e.target.src = ASSETS.FALLBACK_ICON; }}
                 />
                 <div className="container-info">
@@ -111,6 +115,6 @@ export default memo(ContainerTile, (prevProps, nextProps) => {
         prev.image === next.image &&
         prev.iconUrl === next.iconUrl &&
         prev.hasPublicPorts === next.hasPublicPorts &&
-        JSON.stringify(prev.exposedPorts) === JSON.stringify(next.exposedPorts)
+        arraysEqual(prev.exposedPorts, next.exposedPorts)
     );
 });

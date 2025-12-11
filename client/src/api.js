@@ -1,15 +1,29 @@
 import axios from 'axios';
 import { API } from './constants';
 
+const api = axios.create({
+  timeout: 10000,
+});
+
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.code !== 'ERR_CANCELED') {
+      console.error('API Error:', error.message);
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const fetchContainers = async ({ showAll, showStopped, signal }) => {
-  const response = await axios.get(
-    `${API.CONTAINERS}?includeWithoutPorts=${showAll}&includeStopped=${showStopped}`,
-    { signal }
-  );
-  return response.data;
+  const { data } = await api.get(API.CONTAINERS, {
+    params: { includeWithoutPorts: showAll, includeStopped: showStopped },
+    signal,
+  });
+  return data;
 };
 
 export const fetchContainerVersion = async ({ containerId, signal }) => {
-  const response = await axios.get(API.CONTAINER_VERSION(containerId), { signal });
-  return response.data;
+  const { data } = await api.get(API.CONTAINER_VERSION(containerId), { signal });
+  return data;
 };
