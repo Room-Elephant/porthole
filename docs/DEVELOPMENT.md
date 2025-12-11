@@ -18,9 +18,11 @@ For deeper technical details on how Porthole works, see the [Architecture](ARCHI
 ├── client/             # React frontend (Vite + React 19)
 ├── server/             # Spring Boot backend (Java 25)
 ├── config/             # Template configuration files
+├── dev/                # Development Docker files
+│   ├── Dockerfile      # Multi-stage build for local development
+│   └── compose.yml     # Development compose file
 ├── docs/               # Documentation
-├── Dockerfile          # Multi-stage build definition
-└── compose.yml         # Development compose file
+└── Dockerfile          # CI/production Dockerfile (uses pre-built JAR)
 ```
 
 Porthole is a **Single JAR** application. The React client is built and bundled into the Spring Boot backend during the Maven build process.
@@ -61,16 +63,28 @@ mvn clean package -DskipTests -Pbuild-client
 
 The client will be automatically built and copied into the JAR's static resources.
 
+If you've already built the client separately, you can skip the node/npm steps and just copy the dist folder:
+
+```bash
+cd server
+mvn clean package -DskipTests -Pcopy-client
+```
+
 ### Docker Image
 
-Build the containerized application:
+For local development, use the multi-stage Dockerfile in `dev/`:
 
 ```bash
 # From the project root
-docker build -t porthole:latest .
+docker build -f dev/Dockerfile -t porthole:latest .
+
+# Or use docker compose
+docker compose -f dev/compose.yml up --build
 ```
 
-The Dockerfile uses a multi-stage build that automatically builds both client and server. Dependencies are cached for faster rebuild times.
+The development Dockerfile uses a multi-stage build that automatically builds both client and server. Dependencies are cached for faster rebuild times.
+
+For CI/production, the root `Dockerfile` expects a pre-built JAR (built with `mvn package -Pcopy-client`).
 
 ## Running Locally
 
@@ -140,4 +154,25 @@ For active development, you can run the client and server separately:
    ```
 
 The client dev server proxies API requests to the backend.
+
+## GitHub Actions Workflows
+
+### CI Workflow
+
+Runs on push/PR to `main`. Detects which parts of the codebase changed and only runs relevant jobs:
+
+- **Server job**: Builds and tests the Spring Boot backend (skipped if no `server/` changes)
+- **Client job**: Builds and tests the React frontend (skipped if no `client/` changes)
+
+See `.github/workflows/ci.yml` for the full workflow definition.
+
+### Release Workflow
+
+Runs when a version tag (e.g., `v1.0.0`) is pushed:
+
+- **Server job**: Builds and tests the Spring Boot backend with JaCoCo coverage
+- **Client job**: Installs, tests, and builds the React frontend with Vitest coverage
+- **Docker job**: Creates the Docker image and GitHub Release
+
+See `.github/workflows/release.yml` for the full workflow definition.
 
