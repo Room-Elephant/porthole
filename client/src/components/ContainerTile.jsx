@@ -1,28 +1,18 @@
-import { useState } from 'react';
-import { Settings } from 'lucide-react';
-import ContainerSettings from './ContainerSettings';
+import { useState, memo, lazy, Suspense } from 'react';
+import { Settings, Loader2 } from 'lucide-react';
+
+const ContainerSettings = lazy(() => import('./ContainerSettings'));
 import { useContainerVersion } from '../hooks/useContainerVersion';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 import { STORAGE_KEYS, ASSETS } from '../constants';
+import { getTargetUrl } from '../utils/containers';
 
 function ContainerTile({ container }) {
     const [showConfig, setShowConfig] = useState(false);
     const hasPublicPorts = container.hasPublicPorts;
 
-    // Key for local storage
-    const portStorageKey = STORAGE_KEYS.PORT_PREF(container.name);
-    const versionCheckKey = STORAGE_KEYS.VERSION_CHECK(container.name);
-
-    // Load selectedPort from localStorage
-    const [selectedPort, setSelectedPort] = useState(() => {
-        const saved = localStorage.getItem(portStorageKey);
-        return saved ? parseInt(saved) : null;
-    });
-
-    // Load checkUpdates preference from localStorage (default: true)
-    const [checkUpdates, setCheckUpdates] = useState(() => {
-        const saved = localStorage.getItem(versionCheckKey);
-        return saved === null ? true : saved === 'true';
-    });
+    const [selectedPort, setSelectedPort] = useLocalStorage(STORAGE_KEYS.PORT_PREF(container.name), null);
+    const [checkUpdates, setCheckUpdates] = useLocalStorage(STORAGE_KEYS.VERSION_CHECK(container.name), true);
 
     const { data: versionInfo, isLoading: versionLoading } = useContainerVersion(
         container.id,
@@ -35,11 +25,6 @@ function ContainerTile({ container }) {
         if (state === 'running') return 'status-running';
         if (state === 'paused' || state === 'restarting') return 'status-warning';
         return 'status-stopped';
-    };
-
-    const getTargetUrl = (port) => {
-        const hostname = window.location.hostname;
-        return `http://${hostname}:${port}`;
     };
 
     const handleTileClick = () => {
@@ -64,17 +49,6 @@ function ContainerTile({ container }) {
         setShowConfig(true);
     };
 
-    const handlePortSelect = (port) => {
-        setSelectedPort(port);
-        localStorage.setItem(portStorageKey, port);
-        // Don't close the modal, let user continue with other settings
-    };
-
-    const handleToggleCheckUpdates = (checked) => {
-        setCheckUpdates(checked);
-        localStorage.setItem(versionCheckKey, checked.toString());
-    };
-
     return (
         <>
             <div className={`card ${!hasPublicPorts ? 'disabled' : ''}`} onClick={handleTileClick}>
@@ -97,9 +71,7 @@ function ContainerTile({ container }) {
                     <h3 title={container.name}>{container.displayName}</h3>
                     <p className="container-image" title={container.image}>
                         {checkUpdates && versionLoading && (
-                            <span className="version-loading" title="Checking for updates...">
-                                ...
-                            </span>
+                            <Loader2 size={14} className="version-loading" title="Checking for updates..." />
                         )}
                         {checkUpdates && !versionLoading && versionInfo?.updateAvailable && (
                             <span className="update-warning" title={`Update available: ${versionInfo.latestVersion}`}>
@@ -112,18 +84,33 @@ function ContainerTile({ container }) {
             </div>
 
             {showConfig && (
-                <ContainerSettings
-                    containerName={container.name}
-                    ports={container.exposedPorts}
-                    selectedPort={selectedPort}
-                    checkUpdates={checkUpdates}
-                    onClose={() => setShowConfig(false)}
-                    onSelectPort={handlePortSelect}
-                    onToggleCheckUpdates={handleToggleCheckUpdates}
-                />
+                <Suspense fallback={null}>
+                    <ContainerSettings
+                        containerName={container.name}
+                        ports={container.exposedPorts}
+                        selectedPort={selectedPort}
+                        checkUpdates={checkUpdates}
+                        onClose={() => setShowConfig(false)}
+                        onSelectPort={setSelectedPort}
+                        onToggleCheckUpdates={setCheckUpdates}
+                    />
+                </Suspense>
             )}
         </>
     );
 }
 
-export default ContainerTile;
+export default memo(ContainerTile, (prevProps, nextProps) => {
+    const prev = prevProps.container;
+    const next = nextProps.container;
+    // Note: status is intentionally excluded - it contains uptime which changes constantly
+    // but doesn't affect visual rendering (only tooltip text)
+    return (
+        prev.id === next.id &&
+        prev.state === next.state &&
+        prev.image === next.image &&
+        prev.iconUrl === next.iconUrl &&
+        prev.hasPublicPorts === next.hasPublicPorts &&
+        JSON.stringify(prev.exposedPorts) === JSON.stringify(next.exposedPorts)
+    );
+});

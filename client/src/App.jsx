@@ -1,53 +1,32 @@
-import { useState } from 'react';
-import { Settings } from 'lucide-react';
+import { useState, useMemo, lazy, Suspense } from 'react';
+import { Settings, Package } from 'lucide-react';
 import ContainerTile from './components/ContainerTile';
-import AppSettings from './components/AppSettings';
 import SkeletonTile from './components/SkeletonTile';
+
+const AppSettings = lazy(() => import('./components/AppSettings'));
 import { useContainers } from './hooks/useContainers';
+import { useLocalStorage } from './hooks/useLocalStorage';
 import { STORAGE_KEYS } from './constants';
+import { groupByProject } from './utils/containers';
 
 function App() {
   const [showSettings, setShowSettings] = useState(false);
-  // Load toggle state from localStorage, default to false
-  const [showAll, setShowAll] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.SHOW_ALL);
-    return saved === 'true';
-  });
-  const [showStopped, setShowStopped] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.SHOW_STOPPED);
-    return saved === 'true';
-  });
+  const [showAll, setShowAll] = useLocalStorage(STORAGE_KEYS.SHOW_ALL, false);
+  const [showStopped, setShowStopped] = useLocalStorage(STORAGE_KEYS.SHOW_STOPPED, false);
 
   const { data: containers = [], isLoading, error } = useContainers({ showAll, showStopped });
 
-  const handleToggleChange = (checked) => {
-    setShowAll(checked);
-    localStorage.setItem(STORAGE_KEYS.SHOW_ALL, checked.toString());
-  };
-
-  const handleShowStoppedChange = (checked) => {
-    setShowStopped(checked);
-    localStorage.setItem(STORAGE_KEYS.SHOW_STOPPED, checked.toString());
-  };
-
-  // Group containers by project
-  const groupByProject = (containers) => {
-    const groups = {};
-    containers.forEach(container => {
-      const project = container.project || null;
-      if (!groups[project]) {
-        groups[project] = [];
-      }
-      groups[project].push(container);
-    });
-    return groups;
-  };
-
-  const groupedContainers = groupByProject(containers);
-  const standaloneContainers = groupedContainers[null] || [];
-  const projectNames = Object.keys(groupedContainers)
-    .filter(key => key !== 'null' && key !== null)
-    .sort();
+  // Group containers by project (memoized)
+  const { groupedContainers, standaloneContainers, projectNames } = useMemo(() => {
+    const groups = groupByProject(containers);
+    return {
+      groupedContainers: groups,
+      standaloneContainers: groups[null] || [],
+      projectNames: Object.keys(groups)
+        .filter(key => key !== 'null' && key !== null)
+        .sort(),
+    };
+  }, [containers]);
 
   const renderContent = () => {
     if (isLoading) {
@@ -62,8 +41,30 @@ function App() {
 
     if (error) {
       return (
-        <div style={{ color: 'red' }}>
+        <div className="error-message">
           Failed to fetch containers. Ensure Docker and Server are running.
+        </div>
+      );
+    }
+
+    if (containers.length === 0) {
+      return (
+        <div className="empty-state">
+          <Package size={64} strokeWidth={1} />
+          <h2>No containers found</h2>
+          <p>
+            {!showAll && !showStopped
+              ? 'No running containers with exposed ports. Try enabling "Show stopped containers" or "Show containers without ports" in settings.'
+              : !showStopped
+              ? 'No containers with exposed ports found. Try enabling "Show stopped containers" in settings.'
+              : !showAll
+              ? 'No running containers found. Try enabling "Show containers without ports" in settings.'
+              : 'No containers found. Make sure Docker is running and has containers.'}
+          </p>
+          <button className="settings-btn-primary" onClick={() => setShowSettings(true)}>
+            <Settings size={18} />
+            Open Settings
+          </button>
         </div>
       );
     }
@@ -110,13 +111,15 @@ function App() {
       </div>
 
       {showSettings && (
-        <AppSettings
-          showStopped={showStopped}
-          showAll={showAll}
-          onToggleShowStopped={handleShowStoppedChange}
-          onToggleShowAll={handleToggleChange}
-          onClose={() => setShowSettings(false)}
-        />
+        <Suspense fallback={null}>
+          <AppSettings
+            showStopped={showStopped}
+            showAll={showAll}
+            onToggleShowStopped={setShowStopped}
+            onToggleShowAll={setShowAll}
+            onClose={() => setShowSettings(false)}
+          />
+        </Suspense>
       )}
     </div>
   );

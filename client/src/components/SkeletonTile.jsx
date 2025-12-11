@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 function SkeletonTile() {
   return (
     <div className="card skeleton-card">
@@ -14,5 +16,5 @@ function SkeletonTile() {
   );
 }
 
-export default SkeletonTile;
+export default memo(SkeletonTile);
 
