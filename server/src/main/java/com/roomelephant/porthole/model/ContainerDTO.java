@@ -1,5 +1,7 @@
 package com.roomelephant.porthole.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 public record ContainerDTO(
@@ -10,7 +12,11 @@ public record ContainerDTO(
         List<Integer> exposedPorts,
         String iconUrl,
         String project,
-        boolean hasPublicPorts,
         String state,
         String status
-) {}
+) {
+    @JsonProperty("hasPublicPorts")
+    public boolean hasPublicPorts() {
+        return exposedPorts != null && !exposedPorts.isEmpty();
+    }
+}

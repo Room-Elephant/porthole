@@ -1,31 +1,30 @@
 package com.roomelephant.porthole.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.roomelephant.porthole.config.properties.RegistryProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
 import java.net.http.HttpClient;
-import java.time.Duration;
 
 @Configuration
 public class RestClientConfig {
 
-    @Value("${registry.timeout.connect}")
-    private Duration connectTimeout;
+    private final RegistryProperties registryProperties;
 
-    @Value("${registry.timeout.read}")
-    private Duration readTimeout;
+    public RestClientConfig(RegistryProperties registryProperties) {
+        this.registryProperties = registryProperties;
+    }
 
     @Bean
     public RestClient restClient() {
         HttpClient httpClient = HttpClient.newBuilder()
-                .connectTimeout(connectTimeout)
+                .connectTimeout(registryProperties.timeout().connect())
                 .build();
 
         JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
-        requestFactory.setReadTimeout(readTimeout);
+        requestFactory.setReadTimeout(registryProperties.timeout().read());
 
         return RestClient.builder()
                 .requestFactory(requestFactory)

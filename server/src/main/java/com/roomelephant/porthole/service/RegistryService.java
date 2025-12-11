@@ -4,11 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.roomelephant.porthole.config.properties.RegistryProperties;
 import com.roomelephant.porthole.util.ImageUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -41,16 +41,16 @@ public class RegistryService {
     private final Cache<String, String> versionCache;
     private final Cache<String, Optional<String>> tokenCache;
 
-    public RegistryService(RestClient restClient, @Value("${registry.cache.ttl}") Duration cacheTtl) {
+    public RegistryService(RestClient restClient, RegistryProperties registryProperties) {
         this.restClient = restClient;
         this.objectMapper = new ObjectMapper();
         this.versionCache = Caffeine.newBuilder()
-                .expireAfterWrite(cacheTtl)
-                .maximumSize(100)
+                .expireAfterWrite(registryProperties.cache().ttl())
+                .maximumSize(registryProperties.cache().versionMaxSize())
                 .build();
         this.tokenCache = Caffeine.newBuilder()
                 .expireAfterWrite(TOKEN_TTL)
-                .maximumSize(50)
+                .maximumSize(1)
                 .build();
     }
 

@@ -1,20 +1,56 @@
-import { useState, useMemo, lazy, Suspense } from 'react';
-import { Settings, Package } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Settings, Package, AlertTriangle } from 'lucide-react';
 import ContainerTile from './components/ContainerTile';
 import SkeletonTile from './components/SkeletonTile';
-
-const AppSettings = lazy(() => import('./components/AppSettings'));
+import AppSettings from './components/AppSettings';
 import { useContainers } from './hooks/useContainers';
+import { useDockerHealth } from './hooks/useDockerHealth';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { STORAGE_KEYS } from './constants';
 import { groupByProject } from './utils/containers';
+
+const isBadGateway = (error) => error?.response?.status === 502;
 
 function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showAll, setShowAll] = useLocalStorage(STORAGE_KEYS.SHOW_ALL, false);
   const [showStopped, setShowStopped] = useLocalStorage(STORAGE_KEYS.SHOW_STOPPED, false);
+  const [isDockerDown, setIsDockerDown] = useState(false);
 
-  const { data: containers = [], isLoading, error } = useContainers({ showAll, showStopped });
+  const { 
+    data: containers = [], 
+    isLoading, 
+    error: containersError,
+    refetch: refetchContainers 
+  } = useContainers({ showAll, showStopped });
+  
+  // Only check Docker health when containers fail with bad gateway or return empty, or when settings are open
+  const shouldCheckHealth = isBadGateway(containersError) || (containers.length === 0 && !isLoading && !containersError) || showSettings;
+  
+  // Poll every 5s when Docker is down, otherwise no polling
+  const { data: dockerHealth, isLoading: isDockerHealthLoading } = useDockerHealth({ 
+    enabled: shouldCheckHealth,
+    pollInterval: isDockerDown ? 5000 : null
+  });
+
+  // Update Docker down state based on health check
+  useEffect(() => {
+    if (dockerHealth?.status === 'DOWN') {
+      setIsDockerDown(true);
+    } else if (dockerHealth?.status === 'UP') {
+      setIsDockerDown(false);
+    }
+  }, [dockerHealth?.status]);
+
+  // When Docker recovers from DOWN, refetch containers
+  useEffect(() => {
+    if (dockerHealth?.status === 'UP' && isDockerDown === false) {
+      refetchContainers();
+    }
+  }, [dockerHealth?.status, isDockerDown, refetchContainers]);
+
+  // Determine Docker status for settings display
+  const dockerStatus = isDockerHealthLoading ? 'CHECKING' : (dockerHealth?.status || 'UNKNOWN');
 
   // Group containers by project (memoized)
   const { groupedContainers, standaloneContainers, projectNames } = useMemo(() => {
@@ -39,10 +75,20 @@ function App() {
       );
     }
 
-    if (error) {
+    if (containersError && !isBadGateway(containersError)) {
       return (
         <div className="error-message">
-          Failed to fetch containers. Ensure Docker and Server are running.
+          Failed to fetch containers. Ensure the server is running.
+        </div>
+      );
+    }
+
+    if (isDockerDown) {
+      return (
+        <div className="empty-state warning">
+          <AlertTriangle size={64} strokeWidth={1} />
+          <h2>Docker unavailable</h2>
+          <p>Could not connect to Docker. Waiting for Docker to become available...</p>
         </div>
       );
     }
@@ -59,12 +105,8 @@ function App() {
               ? 'No containers with exposed ports found. Try enabling "Show stopped containers" in settings.'
               : !showAll
               ? 'No running containers found. Try enabling "Show containers without ports" in settings.'
-              : 'No containers found. Make sure Docker is running and has containers.'}
+              : 'Docker is running but no containers exist. Start some containers to see them here.'}
           </p>
-          <button className="settings-btn-primary" onClick={() => setShowSettings(true)}>
-            <Settings size={18} />
-            Open Settings
-          </button>
         </div>
       );
     }
@@ -111,15 +153,14 @@ function App() {
       </div>
 
       {showSettings && (
-        <Suspense fallback={null}>
-          <AppSettings
-            showStopped={showStopped}
-            showAll={showAll}
-            onToggleShowStopped={setShowStopped}
-            onToggleShowAll={setShowAll}
-            onClose={() => setShowSettings(false)}
-          />
-        </Suspense>
+        <AppSettings
+          showStopped={showStopped}
+          showAll={showAll}
+          onToggleShowStopped={setShowStopped}
+          onToggleShowAll={setShowAll}
+          onClose={() => setShowSettings(false)}
+          dockerStatus={dockerStatus}
+        />
       )}
     </div>
   );

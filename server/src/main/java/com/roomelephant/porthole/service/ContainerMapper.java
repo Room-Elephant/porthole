@@ -2,7 +2,6 @@ package com.roomelephant.porthole.service;
 
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.ContainerPort;
-import com.roomelephant.porthole.config.IconConfigService;
 import com.roomelephant.porthole.model.ContainerDTO;
 import com.roomelephant.porthole.util.ImageUtils;
 import org.jspecify.annotations.NonNull;
@@ -19,10 +18,10 @@ public class ContainerMapper {
     private static final String UNKNOWN = "Unknown";
     private static final String LABEL_PROJECT = "com.docker.compose.project";
 
-    private final IconConfigService iconConfigService;
+    private final IconService iconService;
 
-    public ContainerMapper(IconConfigService iconConfigService) {
-        this.iconConfigService = iconConfigService;
+    public ContainerMapper(IconService iconService) {
+        this.iconService = iconService;
     }
 
     public @NonNull ContainerDTO toDTO(@NonNull Container container) {
@@ -39,8 +38,6 @@ public class ContainerMapper {
         Map<String, String> labels = container.getLabels();
         String project = labels != null ? labels.get(LABEL_PROJECT) : null;
 
-        boolean hasPublicPorts = !ports.isEmpty();
-
         String state = container.getState();
         String status = container.getStatus();
 
@@ -54,13 +51,12 @@ public class ContainerMapper {
                 ports,
                 iconUrl,
                 project,
-                hasPublicPorts,
                 state,
                 status);
     }
 
     private String resolveIconUrl(String imageFull) {
-        return iconConfigService.resolveIcon(ImageUtils.extractName(imageFull));
+        return iconService.resolveIcon(ImageUtils.extractName(imageFull));
     }
 
     private String computeDisplayName(String name, String project) {

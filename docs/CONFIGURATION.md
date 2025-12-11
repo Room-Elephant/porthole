@@ -15,7 +15,17 @@ Porthole exposes a health endpoint via Spring Actuator:
 GET /actuator/health
 ```
 
+The health endpoint includes a Docker connectivity check that verifies the Docker daemon is reachable. If the Docker socket is unavailable or unresponsive, the health status will report as DOWN.
+
 The Docker container includes a built-in HEALTHCHECK that polls this endpoint every 30 seconds.
+
+## Response Compression
+
+Porthole automatically compresses JSON responses larger than 1KB using gzip, reducing bandwidth usage for the container list API.
+
+## Graceful Shutdown
+
+When stopping Porthole, active requests are allowed up to 20 seconds to complete before the application terminates. This ensures in-flight API calls are not abruptly dropped.
 
 ## Docker Host
 
@@ -36,6 +46,7 @@ Porthole queries Docker Hub to check for updates. You can configure timeouts and
 | `REGISTRY_TIMEOUT_CONNECT` | `5s` | Connection timeout for Docker Hub API |
 | `REGISTRY_TIMEOUT_READ` | `10s` | Read timeout for Docker Hub API |
 | `REGISTRY_CACHE_TTL` | `1h` | How long to cache version information |
+| `REGISTRY_CACHE_VERSION_MAX_SIZE` | `100` | Maximum cached version entries |
 
 ## Icon Mappings
 

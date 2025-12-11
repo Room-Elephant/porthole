@@ -1,0 +1,37 @@
+package com.roomelephant.porthole.service;
+
+import com.roomelephant.porthole.config.properties.DashboardProperties;
+import org.jspecify.annotations.NonNull;
+import org.springframework.stereotype.Service;
+
+import java.util.Map;
+
+@Service
+public class IconService {
+
+    private final Map<String, String> iconMappings;
+    private final DashboardProperties dashboardProperties;
+
+    public IconService(Map<String, String> iconMappings, DashboardProperties dashboardProperties) {
+        this.iconMappings = iconMappings;
+        this.dashboardProperties = dashboardProperties;
+    }
+
+    public @NonNull String resolveIcon(@NonNull String imageName) {
+        if (iconMappings.containsKey(imageName)) {
+            return buildDashboardIconsUrl(iconMappings.get(imageName));
+        }
+
+        String iconName = sanitizeIconName(imageName);
+        return buildDashboardIconsUrl(iconName);
+    }
+
+    private @NonNull String sanitizeIconName(@NonNull String name) {
+        return name.toLowerCase().replace('_', '-');
+    }
+
+    private @NonNull String buildDashboardIconsUrl(String iconName) {
+        return dashboardProperties.icons().url() + "/" + iconName + dashboardProperties.icons().extension();
+    }
+}
+

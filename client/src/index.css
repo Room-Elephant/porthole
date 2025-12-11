@@ -479,6 +479,28 @@ h1 {
   margin-top: 1rem;
 }
 
+/* Status Row in Settings */
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.status-row .status-indicator {
+  width: 10px;
+  height: 10px;
+}
+
+.status-row .status-label {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+}
+
+.status-row .status-spinner {
+  color: #94a3b8;
+  animation: spin 1s linear infinite;
+}
+
 /* Skeleton Loading */
 @keyframes skeleton-shimmer {
   0% {
@@ -644,6 +666,20 @@ h1 {
   line-height: 1.6;
 }
 
+.empty-state.warning {
+  border-color: rgba(234, 179, 8, 0.3);
+  background: linear-gradient(135deg, #1e293b 0%, #2d2a1e 100%);
+}
+
+.empty-state.warning svg {
+  color: #eab308;
+  opacity: 0.8;
+}
+
+.empty-state.warning h2 {
+  color: #fbbf24;
+}
+
 .settings-btn-primary {
   display: inline-flex;
   align-items: center;
@@ -672,3 +708,4 @@ h1 {
   border-radius: 12px;
   color: #f87171;
 }
+

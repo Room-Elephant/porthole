@@ -27,3 +27,8 @@ export const fetchContainerVersion = async ({ containerId, signal }) => {
   const { data } = await api.get(API.CONTAINER_VERSION(containerId), { signal });
   return data;
 };
+
+export const fetchDockerHealth = async ({ signal } = {}) => {
+  const { data } = await api.get(API.DOCKER_HEALTH, { signal });
+  return data;
+};

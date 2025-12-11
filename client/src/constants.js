@@ -10,6 +10,7 @@ export const STORAGE_KEYS = {
 export const API = {
   CONTAINERS: '/api/containers',
   CONTAINER_VERSION: (id) => `/api/containers/${id}/version`,
+  DOCKER_HEALTH: '/actuator/health/docker',
 };
 
 // Assets

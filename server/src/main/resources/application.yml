@@ -1,5 +1,10 @@
 server:
   port: 9753
+  shutdown: graceful
+  compression:
+    enabled: true
+    mime-types: application/json,text/html,text/plain
+    min-response-size: 1024
 
 spring:
   application:
@@ -7,6 +12,8 @@ spring:
   threads:
     virtual:
       enabled: true
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
 
 # Docker configuration
 docker:
@@ -26,6 +33,7 @@ registry:
     read: 10s
   cache:
     ttl: 1h
+    version-max-size: 100
 
 # Actuator configuration
 management:
@@ -36,4 +44,5 @@ management:
   endpoint:
     health:
       show-details: never
+      show-components: always
 
