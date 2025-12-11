@@ -3,11 +3,16 @@ package com.roomelephant.porthole.service;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.Container;
 import com.roomelephant.porthole.model.ContainerDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.net.ConnectException;
 import java.util.List;
 
+@Slf4j
 @Service
 public class DockerService {
 
@@ -20,13 +25,28 @@ public class DockerService {
     }
 
     public @NonNull List<ContainerDTO> getContainers(boolean includeWithoutPorts, boolean includeStopped) {
-        List<Container> containers = dockerClient.listContainersCmd()
-                .withShowAll(includeStopped)
-                .exec();
+        List<Container> containers;
+        try {
+            containers = dockerClient.listContainersCmd()
+                    .withShowAll(includeStopped)
+                    .exec();
+        } catch (RuntimeException e) {
+            if (isDockerConnectionError(e)) {
+                log.warn("Docker connection failed", e);
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Docker is not reachable");
+            }
+            throw e;
+        }
 
         return containers.parallelStream()
                 .map(containerMapper::toDTO)
                 .filter(dto -> includeWithoutPorts || dto.hasPublicPorts())
                 .toList();
+    }
+
+    private boolean isDockerConnectionError(Throwable e) {
+        if (e == null) return false;
+        if (e instanceof ConnectException) return true;
+        return isDockerConnectionError(e.getCause());
     }
 }

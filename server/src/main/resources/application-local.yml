@@ -1,0 +1,3 @@
+docker:
+  host: unix://${HOME}/.rd/docker.sock
+
