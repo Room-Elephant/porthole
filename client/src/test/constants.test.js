@@ -33,7 +33,7 @@ describe('constants', () => {
 
   describe('ASSETS', () => {
     it('should have correct asset paths', () => {
-      expect(ASSETS.PORTHOLE_ICON).toBe('porthole.png');
+      expect(ASSETS.PORTHOLE_ICON).toBe('porthole.webp');
       expect(ASSETS.FALLBACK_ICON).toBe('https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/docker.webp');
     });
   });

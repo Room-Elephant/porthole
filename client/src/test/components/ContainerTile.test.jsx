@@ -66,7 +66,7 @@ describe('ContainerTile', () => {
     renderWithQuery(<ContainerTile container={container} />);
 
     const icon = screen.getByRole('img');
-    expect(icon).toHaveAttribute('src', 'porthole.png');
+    expect(icon).toHaveAttribute('src', 'porthole.webp');
   });
 
   describe('Status indicator', () => {

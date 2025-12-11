@@ -1,10 +1,10 @@
 # Porthole ⚓️
 
-![Porthole](client/public/porthole.png)
+![Porthole](docs/images/porthole.webp)
 
 > A modern, lightweight dashboard for your local Docker containers.
 
-![Porthole Screenshot](docs/images/screenshot.png)
+![Porthole Screenshot](docs/images/screenshot.webp)
 
 Porthole automatically discovers your running Docker containers and provides a beautiful, clean interface to access them. It resolves container icons automatically using [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons) and allows you to quickly jump to exposed ports.
 
