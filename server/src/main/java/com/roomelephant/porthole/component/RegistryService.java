@@ -1,4 +1,4 @@
-package com.roomelephant.porthole.service;
+package com.roomelephant.porthole.component;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -3,6 +3,7 @@ package com.roomelephant.porthole.service;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.model.ContainerConfig;
+import com.roomelephant.porthole.component.RegistryService;
 import com.roomelephant.porthole.model.VersionDTO;
 import com.roomelephant.porthole.util.ImageUtils;
 import org.jspecify.annotations.NonNull;
@@ -131,7 +132,7 @@ public class VersionService {
                     return true;
                 }
             }
-        } catch (Exception e) {
+        } catch (Exception _) {
             // Squelch errors to avoid breaking UI
         }
 

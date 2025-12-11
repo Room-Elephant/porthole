@@ -38,7 +38,6 @@ public class IconConfig {
             // Should not happen
         }
 
-        // Load external overrides
         File externalFile = new File(dashboardProperties.icons().path());
         if (externalFile.exists()) {
             try {

@@ -1,4 +1,4 @@
-package com.roomelephant.porthole.service;
+package com.roomelephant.porthole.component;
 
 import com.roomelephant.porthole.config.properties.DashboardProperties;
 import org.jspecify.annotations.NonNull;
@@ -7,12 +7,12 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 
 @Service
-public class IconService {
+public class IconComponent {
 
     private final Map<String, String> iconMappings;
     private final DashboardProperties dashboardProperties;
 
-    public IconService(Map<String, String> iconMappings, DashboardProperties dashboardProperties) {
+    public IconComponent(Map<String, String> iconMappings, DashboardProperties dashboardProperties) {
         this.iconMappings = iconMappings;
         this.dashboardProperties = dashboardProperties;
     }

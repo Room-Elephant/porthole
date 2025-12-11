@@ -2,6 +2,7 @@ package com.roomelephant.porthole.service;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.Container;
+import com.roomelephant.porthole.mapper.ContainerMapper;
 import com.roomelephant.porthole.model.ContainerDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -9,17 +10,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.net.ConnectException;
+import java.net.SocketException;
 import java.util.List;
 
 @Slf4j
 @Service
-public class DockerService {
+public class ContainerService {
 
     private final DockerClient dockerClient;
     private final ContainerMapper containerMapper;
 
-    public DockerService(DockerClient dockerClient, ContainerMapper containerMapper) {
+    public ContainerService(DockerClient dockerClient, ContainerMapper containerMapper) {
         this.dockerClient = dockerClient;
         this.containerMapper = containerMapper;
     }
@@ -38,15 +39,13 @@ public class DockerService {
             throw e;
         }
 
-        return containers.parallelStream()
+        return containers.stream()
                 .map(containerMapper::toDTO)
                 .filter(dto -> includeWithoutPorts || dto.hasPublicPorts())
                 .toList();
     }
 
-    private boolean isDockerConnectionError(Throwable e) {
-        if (e == null) return false;
-        if (e instanceof ConnectException) return true;
-        return isDockerConnectionError(e.getCause());
+    private boolean isDockerConnectionError(RuntimeException e) {
+        return e.getCause() instanceof SocketException;
     }
 }

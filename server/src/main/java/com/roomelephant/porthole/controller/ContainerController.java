@@ -2,7 +2,7 @@ package com.roomelephant.porthole.controller;
 
 import com.roomelephant.porthole.model.ContainerDTO;
 import com.roomelephant.porthole.model.VersionDTO;
-import com.roomelephant.porthole.service.DockerService;
+import com.roomelephant.porthole.service.ContainerService;
 import com.roomelephant.porthole.service.VersionService;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,11 +18,11 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class ContainerController {
 
-    private final DockerService dockerService;
+    private final ContainerService containerService;
     private final VersionService versionService;
 
-    public ContainerController(DockerService dockerService, VersionService versionService) {
-        this.dockerService = dockerService;
+    public ContainerController(ContainerService containerService, VersionService versionService) {
+        this.containerService = containerService;
         this.versionService = versionService;
     }
 
@@ -30,7 +30,7 @@ public class ContainerController {
     public List<ContainerDTO> getContainers(
             @RequestParam(defaultValue = "false") boolean includeWithoutPorts,
             @RequestParam(defaultValue = "false") boolean includeStopped) {
-        return dockerService.getContainers(includeWithoutPorts, includeStopped);
+        return containerService.getContainers(includeWithoutPorts, includeStopped);
     }
 
     @GetMapping("/containers/{containerId}/version")

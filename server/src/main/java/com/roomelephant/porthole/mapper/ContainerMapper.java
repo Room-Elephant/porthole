@@ -1,8 +1,9 @@
-package com.roomelephant.porthole.service;
+package com.roomelephant.porthole.mapper;
 
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.ContainerPort;
 import com.roomelephant.porthole.model.ContainerDTO;
+import com.roomelephant.porthole.component.IconComponent;
 import com.roomelephant.porthole.util.ImageUtils;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
@@ -18,10 +19,10 @@ public class ContainerMapper {
     private static final String UNKNOWN = "Unknown";
     private static final String LABEL_PROJECT = "com.docker.compose.project";
 
-    private final IconService iconService;
+    private final IconComponent iconComponent;
 
-    public ContainerMapper(IconService iconService) {
-        this.iconService = iconService;
+    public ContainerMapper(IconComponent iconComponent) {
+        this.iconComponent = iconComponent;
     }
 
     public @NonNull ContainerDTO toDTO(@NonNull Container container) {
@@ -56,7 +57,7 @@ public class ContainerMapper {
     }
 
     private String resolveIconUrl(String imageFull) {
-        return iconService.resolveIcon(ImageUtils.extractName(imageFull));
+        return iconComponent.resolveIcon(ImageUtils.extractName(imageFull));
     }
 
     private String computeDisplayName(String name, String project) {
