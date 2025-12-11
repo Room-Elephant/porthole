@@ -15,6 +15,7 @@ Porthole automatically discovers your running Docker containers and provides a b
 - 🔄 **Update Detection**: Checks Docker Hub for newer image versions and digest changes.
 - 📦 **Compose Grouping**: Groups containers by Docker Compose project.
 - 🔌 **Port Selection**: Remembers your preferred port for containers exposing multiple ports.
+- ⚙️ **Per-Container Settings**: Configure port preference and update checking for each container.
 - 🚦 **Status Indicators**: Shows container health with color-coded semaphore (green/yellow/red).
 - 🐳 **Docker Native**: Runs as a single, lightweight Docker container.
 - 🛠 **Customizable**: Override icon mappings via a simple JSON configuration.

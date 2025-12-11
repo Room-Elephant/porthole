@@ -93,3 +93,22 @@ The application comes with these built-in defaults:
 | `postgres` | `postgresql` |
 
 Overriding these keys in your external file will take precedence.
+
+## Per-Container Settings
+
+Each container has a settings panel accessible via the gear icon. Settings are stored in your browser's local storage.
+
+### Port Selection
+
+For containers with multiple exposed ports, you can select which port to use when clicking the container tile. The selected port is remembered across sessions.
+
+### Version Update Checking
+
+You can enable or disable version update checking for individual containers. When disabled:
+- No requests are made to check for newer versions
+- The update warning indicator (⚠️) is not shown
+
+This is useful for:
+- Local development images that don't need update checks
+- Containers with private registries that Porthole cannot query
+- Reducing network requests for containers you don't want to update

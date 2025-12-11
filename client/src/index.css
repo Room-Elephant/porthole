@@ -340,6 +340,7 @@ h1 {
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
+  position: relative;
 }
 
 .port-option:hover {
@@ -352,7 +353,49 @@ h1 {
   background: #1d4ed8;
   color: white;
   font-weight: 600;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+}
+
+.port-option .checkmark {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Settings Modal */
+.settings-modal {
+  width: 340px;
+}
+
+.settings-section {
+  margin-bottom: 1.5rem;
+}
+
+.settings-section:last-child {
+  margin-bottom: 0;
+}
+
+.settings-section.with-divider {
+  padding-top: 1.5rem;
+  border-top: 1px solid #334155;
+}
+
+.settings-section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 1rem 0;
+}
+
+.settings-toggle {
+  justify-content: flex-start;
+}
+
+.settings-description {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0.75rem 0 0 0;
+  line-height: 1.4;
 }
