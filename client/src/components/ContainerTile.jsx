@@ -114,8 +114,8 @@ function ContainerTile({ container }) {
                     onError={(e) => { e.target.src = 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/docker.webp'; }} // Fallback
                 />
                 <div className="container-info">
-                    <h3>{container.name}</h3>
-                    <p className="container-image">
+                    <h3 title={container.name}>{container.displayName}</h3>
+                    <p className="container-image" title={container.image}>
                         {checkUpdates && versionLoading && (
                             <span className="version-loading" title="Checking for updates...">
                                 ...
@@ -133,6 +133,7 @@ function ContainerTile({ container }) {
 
             {showConfig && (
                 <ContainerSettings
+                    containerName={container.name}
                     ports={container.exposedPorts}
                     selectedPort={selectedPort}
                     checkUpdates={checkUpdates}

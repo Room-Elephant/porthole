@@ -1,12 +1,12 @@
 import React from 'react';
 
-function ContainerSettings({ ports, selectedPort, checkUpdates, onClose, onSelectPort, onToggleCheckUpdates }) {
+function ContainerSettings({ containerName, ports, selectedPort, checkUpdates, onClose, onSelectPort, onToggleCheckUpdates }) {
     const hasPorts = ports && ports.length > 0;
 
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content settings-modal" onClick={e => e.stopPropagation()}>
-                <h3 className="modal-title">Container Settings</h3>
+                <h3 className="modal-title">{containerName}</h3>
                 
                 {/* Port Selection Section */}
                 {hasPorts && (

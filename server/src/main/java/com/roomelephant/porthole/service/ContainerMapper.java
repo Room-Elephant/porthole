@@ -44,9 +44,12 @@ public class ContainerMapper {
         String state = container.getState();
         String status = container.getStatus();
 
+        String displayName = computeDisplayName(name, project);
+
         return new ContainerDTO(
                 container.getId(),
                 name,
+                displayName,
                 imageFull,
                 ports,
                 iconUrl,
@@ -58,6 +61,13 @@ public class ContainerMapper {
 
     private String resolveIconUrl(String imageFull) {
         return iconConfigService.resolveIcon(ImageUtils.extractName(imageFull));
+    }
+
+    private String computeDisplayName(String name, String project) {
+        if (project != null && name.startsWith(project + "-")) {
+            return name.substring(project.length() + 1);
+        }
+        return name;
     }
 }
 
