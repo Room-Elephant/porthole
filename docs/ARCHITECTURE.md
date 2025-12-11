@@ -1,5 +1,7 @@
 # Architecture
 
+[← Back to Development Guide](DEVELOPMENT.md)
+
 Porthole is designed as a monolithic, single-artifact application for simplicity of deployment.
 
 ## Tech Stack
@@ -7,7 +9,7 @@ Porthole is designed as a monolithic, single-artifact application for simplicity
 ### Backend
 - **Framework**: Spring Boot 4.0.0
 - **Language**: Java 25
-- **Concurrency**: Virtual threads enabled, parallel container mapping
+- **Concurrency**: Virtual threads enabled
 - **Docker Client**: [docker-java](https://github.com/docker-java/docker-java) with `ZeroDepDockerHttpClient` (Unix Socket support).
 - **Build Tool**: Maven
 
@@ -69,6 +71,28 @@ mongo:7         → library/mongo      (tag stripped for API calls)
 This is required because the Docker Registry API expects the full path:
 - ✅ `https://registry-1.docker.io/v2/library/redis/manifests/latest`
 - ❌ `https://registry-1.docker.io/v2/redis/manifests/latest`
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/containers` | GET | Returns all containers. Supports `includeWithoutPorts` and `includeStopped` query params |
+| `/api/containers/{containerId}/version` | GET | Returns version info for a container (current version, latest version, update availability) |
+| `/actuator/health` | GET | Health check with Docker connectivity status |
+
+## Health Check
+
+The health endpoint includes a Docker connectivity check that verifies the Docker daemon is reachable. If the Docker socket is unavailable or unresponsive, the health status will report as DOWN.
+
+The Docker container includes a built-in HEALTHCHECK that polls this endpoint every 30 seconds.
+
+## Response Compression
+
+JSON responses larger than 1KB are automatically compressed using gzip.
+
+## Graceful Shutdown
+
+When stopping Porthole, active requests are allowed up to 20 seconds to complete before the application terminates.
 
 ## Directory Structure
 

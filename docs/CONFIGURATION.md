@@ -1,5 +1,17 @@
 # Configuration
 
+[← Back to README](../README.md)
+
+## Docker Host
+
+By default, Porthole connects to Docker via `unix:///var/run/docker.sock`. You can override this using an environment variable:
+
+```bash
+docker run -d -p 9753:9753 \
+  -e DOCKER_HOST=tcp://localhost:2375 \
+  --name porthole porthole
+```
+
 ## Configuration Files
 
 The Docker image includes template configuration files in `/app/config/`:
@@ -18,44 +30,7 @@ docker run -d -p 9753:9753 \
   --name porthole porthole
 ```
 
-## API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/containers` | GET | Returns all containers. Supports `includeWithoutPorts` and `includeStopped` query params |
-| `/api/containers/{containerId}/version` | GET | Returns version info for a container (current version, latest version, update availability) |
-
-## Health Check
-
-Porthole exposes a health endpoint via Spring Actuator:
-
-```
-GET /actuator/health
-```
-
-The health endpoint includes a Docker connectivity check that verifies the Docker daemon is reachable. If the Docker socket is unavailable or unresponsive, the health status will report as DOWN.
-
-The Docker container includes a built-in HEALTHCHECK that polls this endpoint every 30 seconds.
-
-## Response Compression
-
-Porthole automatically compresses JSON responses larger than 1KB using gzip, reducing bandwidth usage for the container list API.
-
-## Graceful Shutdown
-
-When stopping Porthole, active requests are allowed up to 20 seconds to complete before the application terminates. This ensures in-flight API calls are not abruptly dropped.
-
-## Docker Host
-
-By default, Porthole connects to Docker via `unix:///var/run/docker.sock`. You can override this using an environment variable:
-
-```bash
-docker run -d -p 9753:9753 \
-  -e DOCKER_HOST=tcp://localhost:2375 \
-  --name porthole porthole
-```
-
-## Registry Configuration
+### Registry Configuration
 
 Porthole queries Docker Hub to check for updates. You can configure timeouts and cache settings:
 
@@ -66,11 +41,11 @@ Porthole queries Docker Hub to check for updates. You can configure timeouts and
 | `REGISTRY_CACHE_TTL` | `1h` | How long to cache version information |
 | `REGISTRY_CACHE_VERSION_MAX_SIZE` | `100` | Maximum cached version entries |
 
-## Icon Mappings
+### Icon Mappings
 
 Porthole uses a smart icon resolution strategy, but sometimes you need manual control. You can configure icon mappings using a YAML file.
 
-## Icon CDN
+#### Icon CDN
 
 By default, icons are fetched from Dashboard Icons CDN. You can customize the source:
 
@@ -79,16 +54,16 @@ By default, icons are fetched from Dashboard Icons CDN. You can customize the so
 | `DASHBOARD_ICONS_URL` | `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp` | Base URL for icons |
 | `DASHBOARD_ICONS_EXTENSION` | `.webp` | File extension |
 
-## Icon Resolution Logic
+#### Icon Resolution Logic
 
 1.  **Exact Match**: Checks `icons.yml` (both internal defaults and your external overrides).
 2.  **Dashboard Icons**: Fetches from the configured CDN using the image name.
 
-## Customizing Icons
+#### Customizing Icons
 
 You can override defaults or add new mappings by editing `/app/config/icons.yml` or mounting your own file.
 
-### 1. Create YAML File
+1. Create YAML File
 
 ```yaml
 # Maps container image names to Dashboard Icons slugs
@@ -100,7 +75,7 @@ custom-app: react
 The **Key** is the container image name (or simple name like `postgres`).
 The **Value** is the icon slug from [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons).
 
-### 2. Run with Volume Mount
+2. Run with Volume Mount
 
 The Docker image includes a template at `/app/config/icons.yml`. Mount your file to override it:
 
@@ -111,7 +86,7 @@ docker run -d -p 9753:9753 \
   --name porthole porthole
 ```
 
-## Default Mappings
+#### Default Mappings
 
 The application comes with these built-in defaults:
 

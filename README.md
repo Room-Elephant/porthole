@@ -18,7 +18,7 @@ Porthole automatically discovers your running Docker containers and provides a b
 - ⚙️ **Per-Container Settings**: Configure port preference and update checking for each container.
 - 🚦 **Status Indicators**: Shows container health with color-coded semaphore (green/yellow/red).
 - 🐳 **Docker Native**: Runs as a single, lightweight Docker container.
-- 🛠 **Customizable**: Override icon mappings via a simple JSON configuration.
+- 🛠 **Customizable**: Override icon mappings via a simple YAML configuration.
 
 ## Quick Start
 
@@ -38,77 +38,32 @@ Open [http://localhost:9753](http://localhost:9753) to view your dashboard.
 
 ## Configuration
 
-Porthole attempts to match container image names to icons automatically. If you use custom image names or want to change an icon, you can provide a custom `icons.json` file.
+**Docker Host**: By default, Porthole connects via `unix:///var/run/docker.sock`. Override with the `DOCKER_HOST` environment variable.
 
-See [Configuration Documentation](docs/CONFIGURATION.md) for details.
+**Custom Icons**: Create an `icons.yml` file to map container images to [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons) slugs:
 
-## Development
-
-Porthole is a **Single JAR** application. The React client is built and bundled into the Spring Boot backend during the Maven build process.
-
-### Prerequisites
-- Java 25+
-- Maven
-- Node.js 24+ and npm
-- Docker
-
-### Building from Source
-
-#### Build Backend Only
-Build just the Spring Boot backend without the client:
-```bash
-cd server
-mvn clean package -DskipTests
-```
-The JAR will be in `server/target/porthole-0.0.1-SNAPSHOT.jar` but won't include client assets.
-
-#### Build Client Only
-Build just the React client:
-```bash
-cd client
-npm install
-npm run build
-```
-The built client will be in `client/dist/`.
-
-#### Test Client
-Run the React client unit tests:
-```bash
-cd client
-npm test        # Watch mode
-npm run test:run    # Single run
-npm run test:coverage   # With coverage report
+```yaml
+my-custom-app: react
+postgres: postgresql
 ```
 
-#### Build Backend + Client (Complete Application)
-Build the complete application with client bundled into the backend JAR:
-```bash
-cd server
-mvn clean package -DskipTests -Pbuild-client
-```
-The client will be automatically built and copied into the JAR's static resources.
-
-#### Build Docker Image
-Build the containerized application:
-```bash
-# From the project root
-docker build -t porthole:latest .
-```
-The Dockerfile uses a multi-stage build that automatically builds both client and backend.
-
-### Running Locally
+Mount the entire config directory or individual files:
 
 ```bash
-# Run the JAR directly
-java -jar server/target/porthole-0.0.1-SNAPSHOT.jar
-
-# Or run with Docker
-docker run -p 9753:9753 -v /var/run/docker.sock:/var/run/docker.sock porthole:latest
+docker run -d -p 9753:9753 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v $(pwd)/config:/app/config \
+  --name porthole porthole
 ```
 
-Access the application at `http://localhost:9753`
+See [Configuration Guide](docs/CONFIGURATION.md) for all options.
 
-See [Architecture Documentation](docs/ARCHITECTURE.md) for more details on the tech stack.
+## Documentation
+
+| Guide | Description |
+|-------|-------------|
+| [Configuration](docs/CONFIGURATION.md) | Customize icons, Docker host, registry settings, and more |
+| [Development](docs/DEVELOPMENT.md) | Build from source, run tests, and contribute |
 
 ## License
 
