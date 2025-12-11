@@ -51,12 +51,15 @@ jobs:
         working-directory: server
         run: mvn test -B
 
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+      - name: Generate coverage summary
+        uses: madrapps/jacoco-report@v1.7.2
         with:
-          name: server-coverage
-          path: server/target/site/jacoco/
-          retention-days: 7
+          paths: server/target/site/jacoco/jacoco.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 80
+          min-coverage-changed-files: 80
+          title: Server Coverage
+          update-comment: true
 
   client:
     name: Client Build & Test
@@ -82,14 +85,12 @@ jobs:
         working-directory: client
         run: npm run test:coverage
 
+      - name: Generate coverage summary
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          working-directory: client
+
       - name: Build application
         working-directory: client
         run: npm run build
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: client-coverage
-          path: client/coverage/
-          retention-days: 7
 
