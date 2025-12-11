@@ -1,5 +1,23 @@
 # Configuration
 
+## Configuration Files
+
+The Docker image includes template configuration files in `/app/config/`:
+
+| File | Purpose |
+|------|---------|
+| `application.yml` | Main application settings (Docker host, registry timeouts, icon CDN) |
+| `icons.yml` | Custom icon mappings |
+
+You can mount your own files to override these templates:
+
+```bash
+docker run -d -p 9753:9753 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v $(pwd)/my-config:/app/config \
+  --name porthole porthole
+```
+
 ## API Endpoints
 
 | Endpoint | Method | Description |
@@ -50,7 +68,7 @@ Porthole queries Docker Hub to check for updates. You can configure timeouts and
 
 ## Icon Mappings
 
-Porthole uses a smart icon resolution strategy, but sometimes you need manual control. You can configure icon mappings using a JSON file.
+Porthole uses a smart icon resolution strategy, but sometimes you need manual control. You can configure icon mappings using a YAML file.
 
 ## Icon CDN
 
@@ -63,21 +81,20 @@ By default, icons are fetched from Dashboard Icons CDN. You can customize the so
 
 ## Icon Resolution Logic
 
-1.  **Exact Match**: Checks `icons.json` (both internal defaults and your external overrides).
+1.  **Exact Match**: Checks `icons.yml` (both internal defaults and your external overrides).
 2.  **Dashboard Icons**: Fetches from the configured CDN using the image name.
 
 ## Customizing Icons
 
-You can override defaults or add new mappings by creating a JSON file (e.g., `my-icons.json`) and mounting it to the container.
+You can override defaults or add new mappings by editing `/app/config/icons.yml` or mounting your own file.
 
-### 1. Create JSON File
+### 1. Create YAML File
 
-```json
-{
-  "my-custom-redis": "redis",
-  "postgres": "postgresql",
-  "custom-app": "react"
-}
+```yaml
+# Maps container image names to Dashboard Icons slugs
+my-custom-redis: redis
+postgres: postgresql
+custom-app: react
 ```
 
 The **Key** is the container image name (or simple name like `postgres`).
@@ -85,12 +102,12 @@ The **Value** is the icon slug from [Dashboard Icons](https://github.com/homarr-
 
 ### 2. Run with Volume Mount
 
-Mount your file to `/app/config/icons.json` inside the container.
+The Docker image includes a template at `/app/config/icons.yml`. Mount your file to override it:
 
 ```bash
 docker run -d -p 9753:9753 \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  -v $(pwd)/my-icons.json:/app/config/icons.json \
+  -v $(pwd)/my-icons.yml:/app/config/icons.yml \
   --name porthole porthole
 ```
 
@@ -102,6 +119,7 @@ The application comes with these built-in defaults:
 | :--- | :--- |
 | `mongo` | `mongodb` |
 | `postgres` | `postgresql` |
+| `cassandra` | `apache-cassandra` |
 
 Overriding these keys in your external file will take precedence.
 

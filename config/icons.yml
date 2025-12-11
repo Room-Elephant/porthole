@@ -1,0 +1,8 @@
+# Custom icon mappings
+# Maps container image names to Dashboard Icons slugs
+# See: https://github.com/homarr-labs/dashboard-icons
+#
+# Example:
+#   my-custom-app: react
+#   my-redis: redis
+

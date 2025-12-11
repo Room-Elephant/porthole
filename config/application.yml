@@ -1,0 +1,19 @@
+# Docker configuration
+docker:
+  host: unix:///var/run/docker.sock
+
+# Icon configuration
+dashboard:
+  icons:
+    url: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp
+    extension: .webp
+
+# Registry configuration
+registry:
+  timeout:
+    connect: 5s
+    read: 10s
+  cache:
+    ttl: 1h
+    version-max-size: 100
+

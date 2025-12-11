@@ -22,7 +22,7 @@ docker:
 # Icon configuration
 dashboard:
   icons:
-    path: /app/config/icons.json
+    path: /app/config/icons.yml
     url: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp
     extension: .webp
 

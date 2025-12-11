@@ -45,6 +45,9 @@ WORKDIR /app
 # Copy the built artifact from build stage
 COPY --from=build /app/server/target/porthole-0.0.1-SNAPSHOT.jar app.jar
 
+# Copy config templates for user overrides
+COPY config/ /app/config/
+
 # Expose the port
 EXPOSE 9753
 
@@ -52,5 +55,5 @@ EXPOSE 9753
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:9753/actuator/health || exit 1
 
-# Run the application
-CMD ["java", "-jar", "app.jar"]
+# Run the application with external config
+CMD ["java", "-jar", "app.jar", "--spring.config.additional-location=file:/app/config/"]

@@ -1,7 +1,7 @@
 package com.roomelephant.porthole.config;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.roomelephant.porthole.config.properties.DashboardProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -22,15 +22,16 @@ public class IconConfig {
     @Bean
     public Map<String, String> iconMappings(DashboardProperties dashboardProperties) {
         Map<String, String> mappings = new HashMap<>();
-        ObjectMapper objectMapper = new ObjectMapper();
+        YAMLMapper yamlMapper = new YAMLMapper();
 
-        // Load internal defaults
         try {
-            ClassPathResource resource = new ClassPathResource("icons.json");
+            ClassPathResource resource = new ClassPathResource("icons.yml");
             if (resource.exists()) {
                 try (InputStream inputStream = resource.getInputStream()) {
-                    Map<String, String> defaults = objectMapper.readValue(inputStream, new TypeReference<>() {});
-                    mappings.putAll(defaults);
+                    Map<String, String> defaults = yamlMapper.readValue(inputStream, new TypeReference<>() {});
+                    if (defaults != null) {
+                        mappings.putAll(defaults);
+                    }
                 }
             }
         } catch (IOException _) {
@@ -41,8 +42,10 @@ public class IconConfig {
         File externalFile = new File(dashboardProperties.icons().path());
         if (externalFile.exists()) {
             try {
-                Map<String, String> external = objectMapper.readValue(externalFile, new TypeReference<>() {});
-                mappings.putAll(external);
+                Map<String, String> external = yamlMapper.readValue(externalFile, new TypeReference<>() {});
+                if (external != null) {
+                    mappings.putAll(external);
+                }
                 log.debug("Loaded external icon config from {}", dashboardProperties.icons().path());
             } catch (IOException e) {
                 log.error("Failed to load external icon config: {}", e.getMessage());
