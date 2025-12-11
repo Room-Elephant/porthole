@@ -12,10 +12,11 @@ Porthole is designed as a monolithic, single-artifact application for simplicity
 - **Build Tool**: Maven
 
 ### Client
-- **Framework**: React 18
+- **Framework**: React 19
 - **Bundler**: Vite
 - **Styling**: Vanilla CSS (Modern, Variables-based)
-- **State**: Local React State + LocalStorage (for user preferences)
+- **State**: React Query + LocalStorage (for user preferences)
+- **Testing**: Vitest + React Testing Library
 
 ## Build Process
 

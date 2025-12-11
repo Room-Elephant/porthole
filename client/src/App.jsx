@@ -24,16 +24,13 @@ function App() {
     refetch: refetchContainers 
   } = useContainers({ showAll, showStopped });
   
-  // Only check Docker health when containers fail with bad gateway or return empty, or when settings are open
   const shouldCheckHealth = isBadGateway(containersError) || (containers.length === 0 && !isLoading && !containersError) || showSettings;
   
-  // Poll every 5s when Docker is down, otherwise no polling
   const { data: dockerHealth, isLoading: isDockerHealthLoading, isError: dockerHealthError } = useDockerHealth({ 
     enabled: shouldCheckHealth,
     pollInterval: isDockerDown ? 5000 : null
   });
 
-  // Update Docker down state based on health check or bad gateway from containers
   useEffect(() => {
     if (dockerHealth?.status === 'DOWN' || dockerHealthError || isBadGateway(containersError)) {
       setIsDockerDown(true);
@@ -42,17 +39,14 @@ function App() {
     }
   }, [dockerHealth?.status, dockerHealthError, containersError]);
 
-  // When Docker recovers from DOWN, refetch containers
   useEffect(() => {
     if (dockerHealth?.status === 'UP' && isDockerDown === false) {
       refetchContainers();
     }
   }, [dockerHealth?.status, isDockerDown, refetchContainers]);
 
-  // Determine Docker status for settings display
   const dockerStatus = isDockerHealthLoading ? 'CHECKING' : (dockerHealth?.status || 'UNKNOWN');
 
-  // Group containers by project (memoized)
   const { groupedContainers, standaloneContainers, projectNames } = useMemo(() => {
     const groups = groupByProject(containers);
     return {
@@ -113,7 +107,6 @@ function App() {
 
     return (
       <>
-        {/* Render standalone containers without section header */}
         {standaloneContainers.length > 0 && (
           <div className="container-grid">
             {standaloneContainers.map(container => (
@@ -122,7 +115,6 @@ function App() {
           </div>
         )}
 
-        {/* Render project sections with headers */}
         {projectNames.map(projectName => (
           <div key={projectName} className="project-section">
             <h2 className="project-title">{projectName}</h2>

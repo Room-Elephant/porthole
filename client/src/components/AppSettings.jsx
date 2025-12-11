@@ -30,7 +30,6 @@ function AppSettings({
 
     return (
         <Modal title="Settings" onClose={onClose} className="app-settings-modal">
-            {/* Status Section */}
             <div className="settings-section">
                 <h4 className="settings-section-title">Status</h4>
                 <div className="status-row">
@@ -43,7 +42,6 @@ function AppSettings({
                 </div>
             </div>
 
-            {/* Containers Section */}
             <div className="settings-section with-divider">
                 <h4 className="settings-section-title">Containers</h4>
                 

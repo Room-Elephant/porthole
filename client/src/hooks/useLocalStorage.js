@@ -9,13 +9,18 @@ const parseStoredValue = (stored, defaultValue) => {
   }
 };
 
+/**
+ * Custom hook for persisting state in localStorage with cross-tab synchronization.
+ * @param {string} key - The localStorage key
+ * @param {*} defaultValue - Default value when no stored value exists
+ * @returns {[*, function]} Tuple of [value, setValue]
+ */
 export const useLocalStorage = (key, defaultValue) => {
   const [value, setValue] = useState(() => {
     const saved = localStorage.getItem(key);
     return parseStoredValue(saved, defaultValue);
   });
 
-  // Sync across tabs via storage event
   useEffect(() => {
     const handleStorageChange = (event) => {
       if (event.key === key) {
@@ -38,4 +43,3 @@ export const useLocalStorage = (key, defaultValue) => {
 
   return [value, setStoredValue];
 };
-

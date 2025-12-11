@@ -5,7 +5,6 @@ function ContainerSettings({ containerName, ports, selectedPort, checkUpdates, o
 
     return (
         <Modal title={containerName} onClose={onClose} className="settings-modal">
-            {/* Port Selection Section */}
             {hasPorts && (
                 <div className="settings-section">
                     <h4 className="settings-section-title">Port Selection</h4>
@@ -24,7 +23,6 @@ function ContainerSettings({ containerName, ports, selectedPort, checkUpdates, o
                 </div>
             )}
 
-            {/* Version Updates Section */}
             <div className={`settings-section ${hasPorts ? 'with-divider' : ''}`}>
                 <h4 className="settings-section-title">Version Updates</h4>
                 <label className="toggle-switch settings-toggle">
@@ -45,4 +43,3 @@ function ContainerSettings({ containerName, ports, selectedPort, checkUpdates, o
 }
 
 export default ContainerSettings;
-

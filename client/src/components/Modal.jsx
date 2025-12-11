@@ -3,7 +3,6 @@ import { useEffect, useRef } from 'react';
 function Modal({ title, children, onClose, className = '' }) {
     const modalRef = useRef(null);
 
-    // Handle Escape key to close modal
     useEffect(() => {
         const handleEscape = (event) => {
             if (event.key === 'Escape') {
@@ -15,7 +14,6 @@ function Modal({ title, children, onClose, className = '' }) {
         return () => document.removeEventListener('keydown', handleEscape);
     }, [onClose]);
 
-    // Focus the modal on mount for accessibility
     useEffect(() => {
         modalRef.current?.focus();
     }, []);
@@ -42,4 +40,3 @@ function Modal({ title, children, onClose, className = '' }) {
 }
 
 export default Modal;
-

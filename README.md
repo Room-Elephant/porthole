@@ -71,6 +71,15 @@ npm run build
 ```
 The built client will be in `client/dist/`.
 
+#### Test Client
+Run the React client unit tests:
+```bash
+cd client
+npm test        # Watch mode
+npm run test:run    # Single run
+npm run test:coverage   # With coverage report
+```
+
 #### Build Backend + Client (Complete Application)
 Build the complete application with client bundled into the backend JAR:
 ```bash

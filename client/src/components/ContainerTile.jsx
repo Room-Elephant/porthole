@@ -21,7 +21,6 @@ function ContainerTile({ container }) {
         { enabled: checkUpdates }
     );
 
-    // Determine status indicator color based on container state
     const getStatusClass = () => {
         const state = container.state?.toLowerCase();
         if (state === 'running') return 'status-running';
@@ -30,18 +29,16 @@ function ContainerTile({ container }) {
     };
 
     const handleTileClick = () => {
-        if (!hasPublicPorts) return; // Don't do anything if no ports
+        if (!hasPublicPorts) return;
 
         if (selectedPort && container.exposedPorts.includes(selectedPort)) {
             window.open(getTargetUrl(selectedPort), '_blank');
             return;
         }
 
-        // No preference or invalid preference
         if (container.exposedPorts.length === 1) {
             window.open(getTargetUrl(container.exposedPorts[0]), '_blank');
         } else {
-            // Multiple ports and no preference -> show selection
             setShowConfig(true);
         }
     };
@@ -101,11 +98,14 @@ function ContainerTile({ container }) {
     );
 }
 
+/**
+ * Memoized ContainerTile component.
+ * Status is intentionally excluded from comparison as it contains uptime
+ * which changes constantly but doesn't affect visual rendering.
+ */
 export default memo(ContainerTile, (prevProps, nextProps) => {
     const prev = prevProps.container;
     const next = nextProps.container;
-    // Note: status is intentionally excluded - it contains uptime which changes constantly
-    // but doesn't affect visual rendering (only tooltip text)
     return (
         prev.id === next.id &&
         prev.state === next.state &&

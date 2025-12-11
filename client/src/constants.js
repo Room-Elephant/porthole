@@ -1,4 +1,3 @@
-// localStorage keys
 export const STORAGE_KEYS = {
   SHOW_ALL: 'porthole_showAll',
   SHOW_STOPPED: 'porthole_showStopped',
@@ -6,16 +5,13 @@ export const STORAGE_KEYS = {
   VERSION_CHECK: (name) => `version_check_${name}`,
 };
 
-// API endpoints
 export const API = {
   CONTAINERS: '/api/containers',
   CONTAINER_VERSION: (id) => `/api/containers/${id}/version`,
   DOCKER_HEALTH: '/actuator/health/docker',
 };
 
-// Assets
 export const ASSETS = {
   PORTHOLE_ICON: 'porthole.png',
   FALLBACK_ICON: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/docker.webp',
 };
-
