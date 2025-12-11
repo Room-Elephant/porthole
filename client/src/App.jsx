@@ -28,19 +28,19 @@ function App() {
   const shouldCheckHealth = isBadGateway(containersError) || (containers.length === 0 && !isLoading && !containersError) || showSettings;
   
   // Poll every 5s when Docker is down, otherwise no polling
-  const { data: dockerHealth, isLoading: isDockerHealthLoading } = useDockerHealth({ 
+  const { data: dockerHealth, isLoading: isDockerHealthLoading, isError: dockerHealthError } = useDockerHealth({ 
     enabled: shouldCheckHealth,
     pollInterval: isDockerDown ? 5000 : null
   });
 
-  // Update Docker down state based on health check
+  // Update Docker down state based on health check or bad gateway from containers
   useEffect(() => {
-    if (dockerHealth?.status === 'DOWN') {
+    if (dockerHealth?.status === 'DOWN' || dockerHealthError || isBadGateway(containersError)) {
       setIsDockerDown(true);
     } else if (dockerHealth?.status === 'UP') {
       setIsDockerDown(false);
     }
-  }, [dockerHealth?.status]);
+  }, [dockerHealth?.status, dockerHealthError, containersError]);
 
   // When Docker recovers from DOWN, refetch containers
   useEffect(() => {
@@ -83,7 +83,7 @@ function App() {
       );
     }
 
-    if (isDockerDown) {
+    if (isDockerDown || isBadGateway(containersError)) {
       return (
         <div className="empty-state warning">
           <AlertTriangle size={64} strokeWidth={1} />
