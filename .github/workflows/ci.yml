@@ -51,8 +51,9 @@ jobs:
         working-directory: server
         run: mvn test -B
 
-      - name: Generate coverage summary
+      - name: Add coverage to PR
         uses: madrapps/jacoco-report@v1.7.2
+        if: github.event_name == 'pull_request'
         with:
           paths: server/target/site/jacoco/jacoco.xml
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -60,6 +61,14 @@ jobs:
           min-coverage-changed-files: 80
           title: Server Coverage
           update-comment: true
+
+      - name: Generate coverage summary
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          jacoco-csv-file: server/target/site/jacoco/jacoco.csv
+          generate-summary: true
+          generate-branches-badge: false
+          generate-coverage-badge: false
 
   client:
     name: Client Build & Test
