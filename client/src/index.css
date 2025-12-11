@@ -213,6 +213,7 @@ h1 {
 
 .container-image {
   font-size: 0.9rem;
+  line-height: 1.4;
   color: #a0aec0;
   margin: 0;
   white-space: nowrap;
@@ -220,6 +221,9 @@ h1 {
   text-overflow: ellipsis;
   width: 100%;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .container-info {
@@ -259,8 +263,10 @@ h1 {
 
 .update-warning {
     display: inline;
-    margin-right: 0.5rem;
-    font-size: 1rem;
+    margin-right: 0.25rem;
+    font-size: 0.9rem;
+    line-height: 1;
+    vertical-align: middle;
     cursor: help;
 }
 
@@ -512,4 +518,67 @@ h1 {
   margin: 0 auto;
   color: transparent;
   font-size: 0;
+}
+
+/* Error Boundary */
+.error-boundary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  width: 100%;
+}
+
+.error-boundary-content {
+  text-align: center;
+  padding: 3rem;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  max-width: 400px;
+}
+
+.error-boundary-content h2 {
+  color: #ef4444;
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+}
+
+.error-boundary-content p {
+  color: #94a3b8;
+  margin: 0 0 1.5rem 0;
+  line-height: 1.5;
+}
+
+.error-details {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 0 0 1.5rem 0;
+  font-size: 0.85rem;
+  color: #f87171;
+  overflow-x: auto;
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.retry-btn:hover {
+  background: #2563eb;
 }

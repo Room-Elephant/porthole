@@ -1,4 +1,3 @@
-import React from 'react';
 
 function ContainerSettings({ containerName, ports, selectedPort, checkUpdates, onClose, onSelectPort, onToggleCheckUpdates }) {
     const hasPorts = ports && ports.length > 0;

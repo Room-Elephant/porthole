@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState } from 'react';
+import { Settings } from 'lucide-react';
 import ContainerSettings from './ContainerSettings';
+import { useContainerVersion } from '../hooks/useContainerVersion';
+import { STORAGE_KEYS, ASSETS } from '../constants';
 
 function ContainerTile({ container }) {
     const [showConfig, setShowConfig] = useState(false);
-    const [versionInfo, setVersionInfo] = useState(null);
-    const [versionLoading, setVersionLoading] = useState(false);
     const hasPublicPorts = container.hasPublicPorts;
 
     // Key for local storage
-    const portStorageKey = `port_pref_${container.name}`;
-    const versionCheckKey = `version_check_${container.name}`;
+    const portStorageKey = STORAGE_KEYS.PORT_PREF(container.name);
+    const versionCheckKey = STORAGE_KEYS.VERSION_CHECK(container.name);
 
     // Load selectedPort from localStorage
     const [selectedPort, setSelectedPort] = useState(() => {
@@ -24,27 +24,10 @@ function ContainerTile({ container }) {
         return saved === null ? true : saved === 'true';
     });
 
-    useEffect(() => {
-        const fetchVersionInfo = async () => {
-            if (!checkUpdates) {
-                setVersionInfo(null);
-                setVersionLoading(false);
-                return;
-            }
-
-            setVersionLoading(true);
-            try {
-                const response = await axios.get(`/api/containers/${container.id}/version`);
-                setVersionInfo(response.data);
-            } catch (err) {
-                console.error('Failed to fetch version info:', err);
-            } finally {
-                setVersionLoading(false);
-            }
-        };
-
-        fetchVersionInfo();
-    }, [container.id, checkUpdates]);
+    const { data: versionInfo, isLoading: versionLoading } = useContainerVersion(
+        container.id,
+        { enabled: checkUpdates }
+    );
 
     // Determine status indicator color based on container state
     const getStatusClass = () => {
@@ -101,17 +84,14 @@ function ContainerTile({ container }) {
                         title={container.status || container.state}
                     ></span>
                     <button className="config-btn" onClick={handleConfigClick} title="Container Settings">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l-.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15-.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
+                        <Settings size={20} />
                     </button>
                 </div>
                 <img
-                    src={container.name.includes("porthole") ? "porthole.png" : container.iconUrl}
+                    src={container.name.includes("porthole") ? ASSETS.PORTHOLE_ICON : container.iconUrl}
                     alt={container.name}
                     className="container-icon"
-                    onError={(e) => { e.target.src = 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/docker.webp'; }} // Fallback
+                    onError={(e) => { e.target.src = ASSETS.FALLBACK_ICON; }}
                 />
                 <div className="container-info">
                     <h3 title={container.name}>{container.displayName}</h3>
