@@ -442,3 +442,74 @@ h1 {
   align-items: center;
   gap: 1rem;
 }
+
+/* Skeleton Loading */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-card {
+  pointer-events: none;
+}
+
+.skeleton-status {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #475569;
+}
+
+.skeleton-button {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #475569;
+}
+
+.skeleton-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    #475569 0%,
+    #64748b 50%,
+    #475569 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  margin-bottom: 1rem;
+}
+
+.skeleton-card .skeleton-text {
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    #475569 0%,
+    #64748b 50%,
+    #475569 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-card .container-info h3.skeleton-title {
+  width: 70%;
+  height: 1.8rem;
+  margin: 0 auto;
+  color: transparent;
+  font-size: 0;
+}
+
+.skeleton-card .container-info p.skeleton-subtitle {
+  width: 50%;
+  height: 1.35rem;
+  margin: 0 auto;
+  color: transparent;
+  font-size: 0;
+}
