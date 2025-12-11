@@ -1,11 +1,10 @@
-import { useState, memo, lazy, Suspense } from 'react';
+import { useState, memo } from 'react';
 import { Settings, Loader2 } from 'lucide-react';
 import { useContainerVersion } from '../hooks/useContainerVersion';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { STORAGE_KEYS, ASSETS } from '../constants';
 import { getTargetUrl } from '../utils/containers';
-
-const ContainerSettings = lazy(() => import('./ContainerSettings'));
+import ContainerSettings from './ContainerSettings';
 
 const arraysEqual = (a, b) => 
     a.length === b.length && a.every((v, i) => v === b[i]);
@@ -88,17 +87,15 @@ function ContainerTile({ container }) {
             </div>
 
             {showConfig && (
-                <Suspense fallback={null}>
-                    <ContainerSettings
-                        containerName={container.name}
-                        ports={container.exposedPorts}
-                        selectedPort={selectedPort}
-                        checkUpdates={checkUpdates}
-                        onClose={() => setShowConfig(false)}
-                        onSelectPort={setSelectedPort}
-                        onToggleCheckUpdates={setCheckUpdates}
-                    />
-                </Suspense>
+                <ContainerSettings
+                    containerName={container.name}
+                    ports={container.exposedPorts}
+                    selectedPort={selectedPort}
+                    checkUpdates={checkUpdates}
+                    onClose={() => setShowConfig(false)}
+                    onSelectPort={setSelectedPort}
+                    onToggleCheckUpdates={setCheckUpdates}
+                />
             )}
         </>
     );
