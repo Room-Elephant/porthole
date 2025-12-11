@@ -9,9 +9,10 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class ContainerMapper {
@@ -28,11 +29,10 @@ public class ContainerMapper {
     public @NonNull ContainerDTO toDTO(@NonNull Container container) {
         String name = container.getNames().length > 0 ? container.getNames()[0].substring(1) : UNKNOWN;
         String imageFull = container.getImage();
-        List<Integer> ports = Arrays.stream(container.getPorts())
+        Set<Integer> ports = Arrays.stream(container.getPorts())
                 .map(ContainerPort::getPublicPort)
                 .filter(Objects::nonNull)
-                .distinct()
-                .toList();
+                .collect(Collectors.toSet());
 
         String iconUrl = resolveIconUrl(imageFull);
 

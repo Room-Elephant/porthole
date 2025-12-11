@@ -2,14 +2,14 @@ package com.roomelephant.porthole.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.List;
+import java.util.Set;
 
 public record ContainerDTO(
         String id,
         String name,
         String displayName,
         String image,
-        List<Integer> exposedPorts,
+        Set<Integer> exposedPorts,
         String iconUrl,
         String project,
         String state,

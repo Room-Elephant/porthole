@@ -9,6 +9,8 @@ import java.util.Map;
 @Service
 public class IconComponent {
 
+    private static final String DEFAULT_ICON = "docker";
+
     private final Map<String, String> iconMappings;
     private final DashboardProperties dashboardProperties;
 
@@ -18,6 +20,10 @@ public class IconComponent {
     }
 
     public @NonNull String resolveIcon(@NonNull String imageName) {
+        if (imageName.isBlank()) {
+            return buildDashboardIconsUrl(DEFAULT_ICON);
+        }
+
         if (iconMappings.containsKey(imageName)) {
             return buildDashboardIconsUrl(iconMappings.get(imageName));
         }
