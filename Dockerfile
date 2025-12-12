@@ -7,7 +7,8 @@ COPY client/ ./
 RUN npm run build
 
 # Server Build Stage (Native)
-FROM ghcr.io/graalvm/native-image-community:25-muslib AS server-build
+# Uses standard GraalVM image (glibc-based) which supports both AMD64 and ARM64
+FROM ghcr.io/graalvm/native-image-community:25 AS server-build
 WORKDIR /app/server
 
 # Install Maven
@@ -32,15 +33,20 @@ COPY --from=client-build /app/client/dist ../client/dist
 RUN mvn -Pnative,copy-client package native:compile -DskipTests -B
 
 # Runtime Stage
-FROM alpine:3.21
+# We use debian:bookworm-slim because the binary is linked against glibc (from the build stage),
+# which makes it incompatible with Alpine (musl) unless we did complex static linking.
+# Bookworm-slim is stable, multi-arch, and relatively small (~75MB).
+FROM debian:bookworm-slim
+
+# Install wget for healthcheck
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user (UID/GID 65532) and ensure permissions for Docker socket
 # - 'root' group (0): often owns /var/run/docker.sock
 # - 'daemon' group (1): historically used for docker in some setups
-RUN addgroup -g 65532 nonroot && \
-    adduser -u 65532 -G nonroot -s /bin/false -D nonroot && \
-    addgroup nonroot root && \
-    addgroup nonroot daemon
+RUN groupadd -g 65532 nonroot && \
+    useradd -u 65532 -g nonroot -s /bin/false nonroot && \
+    usermod -aG root,daemon nonroot
 
 WORKDIR /app
 
