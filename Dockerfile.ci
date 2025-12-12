@@ -1,23 +1,25 @@
 # CI Dockerfile - uses pre-built native executables from GitHub Actions
 ARG TARGETARCH
 
-# Stage 1: Set permissions (distroless can't run chmod)
-FROM busybox:1.37 AS permissions
+FROM debian:bookworm-slim
 
 ARG TARGETARCH
 
+# Create non-root user
+RUN groupadd -g 65532 nonroot && \
+    useradd -u 65532 -g nonroot -s /bin/false nonroot
+
 WORKDIR /app
+
+# Copy executable and set permissions
 COPY native/${TARGETARCH}/porthole porthole
-RUN chmod +x porthole
+RUN chmod +x porthole && chown nonroot:nonroot porthole
 
-# Stage 2: Runtime
-FROM gcr.io/distroless/cc-debian12:nonroot
-
-WORKDIR /app
-
-# Copy executable with correct permissions from permissions stage
-COPY --from=permissions --chown=nonroot:nonroot /app/porthole porthole
+# Copy config
 COPY --chown=nonroot:nonroot config/ /app/config/
+
+# Switch to non-root user
+USER nonroot
 
 # Expose the port
 EXPOSE 9753
