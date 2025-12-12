@@ -116,6 +116,13 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
+                        <configuration>
+                            <excludes>
+                                <exclude>**/config/*Config*</exclude>
+                                <exclude>**/config/properties/*</exclude>
+                                <exclude>**/*Application*</exclude>
+                            </excludes>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>check</id>
