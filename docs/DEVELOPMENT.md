@@ -22,6 +22,9 @@ For deeper technical details on how Porthole works, see the [Architecture](ARCHI
 │   ├── Dockerfile      # Multi-stage build for local development
 │   └── compose.yml     # Development compose file
 ├── docs/               # Documentation
+├── e2e/                # Playwright E2E tests
+│   ├── tests/          # Test specifications
+│   └── docker-compose.e2e.yml  # Test environment
 └── Dockerfile          # CI/production Dockerfile (uses pre-built JAR)
 ```
 
@@ -138,6 +141,36 @@ npm test              # Watch mode
 npm run test:run      # Single run
 npm run test:coverage # With coverage report
 ```
+
+### E2E Tests
+
+Run browser-based end-to-end tests using Playwright against the Docker image:
+
+```bash
+# Install dependencies (first time only)
+cd e2e
+npm install
+npx playwright install chromium
+
+# Run e2e tests (builds image, starts environment, runs tests, stops environment)
+npm run e2e
+
+# Or run with visible browser
+npm run e2e:headed
+
+# Or use Playwright UI mode for debugging
+npm run e2e:ui
+
+# Individual steps (for debugging):
+npm run build:image # Build Docker image
+npm run env:up      # Start test environment
+npm run test        # Run tests (environment must be running)
+npm run env:down    # Stop test environment
+```
+
+The E2E test environment includes:
+- Porthole container running the Docker image (auto-built)
+- Mock containers (nginx, alpine) for testing container display and filtering
 
 ## Development Workflow
 

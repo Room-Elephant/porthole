@@ -1,0 +1,49 @@
+# E2E Test Environment
+# Spins up Porthole with mock containers for testing
+
+services:
+  # Porthole application under test
+  porthole:
+    image: porthole:latest
+    container_name: porthole-e2e
+    ports:
+      - "9753:9753"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9753/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    labels:
+      - "porthole.e2e=true"
+
+  # Mock container 1: Running nginx with exposed ports
+  mock-nginx:
+    image: nginx:alpine
+    container_name: mock-nginx-e2e
+    ports:
+      - "8081:80"
+    labels:
+      - "porthole.e2e=true"
+      - "org.opencontainers.image.version=1.27.0"
+
+  # Mock container 2: Running container without exposed ports
+  mock-alpine:
+    image: alpine:latest
+    container_name: mock-alpine-e2e
+    command: ["sleep", "infinity"]
+    labels:
+      - "porthole.e2e=true"
+
+  # Mock container 3: Stopped container (will be stopped after creation)
+  mock-stopped:
+    image: alpine:latest
+    container_name: mock-stopped-e2e
+    command: ["echo", "done"]
+    labels:
+      - "porthole.e2e=true"
+    profiles:
+      - stopped
+
