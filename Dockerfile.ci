@@ -5,9 +5,22 @@ FROM debian:bookworm-slim
 
 ARG TARGETARCH
 
-# Create non-root user
+# --- Start of Modified Section ---
+
+# 1. Create non-root user (as before, GID 65532)
 RUN groupadd -g 65532 nonroot && \
     useradd -u 65532 -g nonroot -s /bin/false nonroot
+
+# 2. Add the 'daemon' group (GID 999) to the container environment
+#    This group matches the necessary permissions for the Docker socket.
+#    The socket on the host is GID 999.
+RUN groupadd -g 999 daemon
+
+# 3. Add the 'nonroot' user to the 'daemon' group
+#    The 'nonroot' user will now be a member of GID 65532 AND GID 999.
+RUN usermod -aG daemon nonroot
+
+# --- End of Modified Section ---
 
 WORKDIR /app
 
