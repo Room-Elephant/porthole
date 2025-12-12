@@ -3,16 +3,14 @@
 # Stage 1: Build native executable
 FROM ghcr.io/graalvm/native-image-community:25-muslib AS build
 
+# Install Maven
+RUN microdnf install -y maven && microdnf clean all
+
 WORKDIR /app
 
-# Copy Maven wrapper and pom
-COPY server/.mvn ./.mvn
-COPY server/mvnw ./
+# Copy pom.xml and download dependencies (cached layer)
 COPY server/pom.xml ./
-RUN chmod +x mvnw
-
-# Download dependencies (cached layer)
-RUN ./mvnw dependency:go-offline -B
+RUN mvn dependency:go-offline -B
 
 # Copy pre-built client dist
 COPY client/dist ./client-dist
@@ -23,7 +21,7 @@ COPY server/src ./src
 # Build native image
 RUN mkdir -p target/classes/static && \
     cp -r client-dist/* target/classes/static/ && \
-    ./mvnw -Pnative native:compile -DskipTests -B
+    mvn -Pnative native:compile -DskipTests -B
 
 # Stage 2: Runtime
 FROM alpine:3.21
