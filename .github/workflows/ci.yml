@@ -65,10 +65,10 @@ jobs:
             }
             END {
               lp=pct(ln_c,ln_m); bp=pct(br_c,br_m); mp=pct(mth_c,mth_m); ip=pct(inst_c,inst_m)
-              printf "| %s | Lines | %.2f%% | %d / %d |\n", icon(lp,70), lp, ln_c, ln_c+ln_m
-              printf "| %s | Branches | %.2f%% | %d / %d |\n", icon(bp,80), bp, br_c, br_c+br_m
-              printf "| %s | Methods | %.2f%% | %d / %d |\n", icon(mp,80), mp, mth_c, mth_c+mth_m
-              printf "| %s | Instructions | %.2f%% | %d / %d |\n", icon(ip,80), ip, inst_c, inst_c+inst_m
+              printf "| %s | Lines | %.2f%% (:dart: 70%%) | %d / %d |\n", icon(lp,70), lp, ln_c, ln_c+ln_m
+              printf "| %s | Branches | %.2f%% (:dart: 80%%) | %d / %d |\n", icon(bp,80), bp, br_c, br_c+br_m
+              printf "| %s | Methods | %.2f%% (:dart: 80%%) | %d / %d |\n", icon(mp,80), mp, mth_c, mth_c+mth_m
+              printf "| %s | Instructions | %.2f%% (:dart: 80%%) | %d / %d |\n", icon(ip,80), ip, inst_c, inst_c+inst_m
             }
           ' server/target/site/jacoco/jacoco.csv >> $GITHUB_STEP_SUMMARY
 
