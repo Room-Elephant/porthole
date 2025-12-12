@@ -11,13 +11,13 @@ ARG TARGETARCH
 RUN groupadd -g 65532 nonroot && \
     useradd -u 65532 -g nonroot -s /bin/false nonroot
 
-# 2. Add the 'daemon' group (GID 999) to the container environment
-#    This group matches the necessary permissions for the Docker socket.
-#    The socket on the host is GID 999.
-RUN groupadd -g 999 daemon
+# --- FINAL PERMISSION FIX ---
+# 2. DELETE: Removed the failed 'RUN groupadd -g 999 daemon'
+#    The 'daemon' group already exists in debian:bookworm-slim (likely GID 1).
+#    This step is now implicit.
 
-# 3. Add the 'nonroot' user to the 'daemon' group
-#    The 'nonroot' user will now be a member of GID 65532 AND GID 999.
+# 3. Add the 'nonroot' user to the EXISTING 'daemon' group
+#    This is the core fix to grant socket access (since your host uses GID 1).
 RUN usermod -aG daemon nonroot
 
 # --- End of Modified Section ---
