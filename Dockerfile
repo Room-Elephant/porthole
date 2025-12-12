@@ -26,9 +26,10 @@ COPY --from=client-build /app/client/dist ../client/dist
 
 # Build native image
 # -Pnative activates the native profile
-# -Pcopy-client activtes the maven-resources-plugin to copy the client dist
+# -Pcopy-client activates the maven-resources-plugin to copy the client dist
 # 'package' phase ensures 'prepare-package' (copy-client) runs before native compilation
-RUN mvn -Pnative,copy-client package -DskipTests -B
+# 'native:compile' needs to be called explicitly as it's not bound to package phase
+RUN mvn -Pnative,copy-client package native:compile -DskipTests -B
 
 # Runtime Stage
 FROM alpine:3.21
