@@ -4,11 +4,9 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version (e.g., 1.0.0) - will be tagged as v1.0.0-beta'
-        required: true
+  pull_request:
+    branches:
+      - main
 
 env:
   REGISTRY: ghcr.io
@@ -127,10 +125,8 @@ jobs:
             echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
             echo "is_prerelease=false" >> $GITHUB_OUTPUT
           else
-            # workflow_dispatch: append -beta
-            VERSION="${{ inputs.version }}"
-            VERSION="${VERSION#v}"  # Remove leading 'v' if present
-            echo "tag=v${VERSION}-beta" >> $GITHUB_OUTPUT
+            # Pull request: use 0.0.0-beta
+            echo "tag=v0.0.0-beta" >> $GITHUB_OUTPUT
             echo "is_prerelease=true" >> $GITHUB_OUTPUT
           fi
 
@@ -154,6 +150,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Create GitHub Release
+        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.version.outputs.tag }}
