@@ -7,18 +7,14 @@ ARG TARGETARCH
 
 # --- Start of Modified Section ---
 
-# 1. Create non-root user (as before, GID 65532)
+# 1. Create non-root user (UID/GID 65532)
 RUN groupadd -g 65532 nonroot && \
     useradd -u 65532 -g nonroot -s /bin/false nonroot
 
-# --- FINAL PERMISSION FIX ---
-# 2. DELETE: Removed the failed 'RUN groupadd -g 999 daemon'
-#    The 'daemon' group already exists in debian:bookworm-slim (likely GID 1).
-#    This step is now implicit.
-
-# 3. Add the 'nonroot' user to the EXISTING 'daemon' group
-#    This is the core fix to grant socket access (since your host uses GID 1).
-RUN usermod -aG daemon nonroot
+# --- FINAL PERMISSION FIX (Robust Layer) ---
+# Add the 'nonroot' user to the EXISTING system groups required for socket access:
+# 'root' (GID 0, based on your debugging) and 'daemon' (GID 1, for portability).
+RUN usermod -aG root,daemon nonroot
 
 # --- End of Modified Section ---
 
