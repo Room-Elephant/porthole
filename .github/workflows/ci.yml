@@ -57,17 +57,20 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Status | Category | Percentage | Covered / Total |" >> $GITHUB_STEP_SUMMARY
           echo "|:------:|----------|------------|-----------------|" >> $GITHUB_STEP_SUMMARY
-          awk -F, 'NR>1 {
-            inst_m+=$4; inst_c+=$5; br_m+=$6; br_c+=$7; ln_m+=$8; ln_c+=$9; mth_m+=$12; mth_c+=$13
-          } END {
+          awk -F, '
             function pct(c,m) { return (c+m>0) ? c*100/(c+m) : 0 }
             function icon(p) { return (p>=80) ? ":green_circle:" : (p>=60) ? ":large_blue_circle:" : ":red_circle:" }
-            lp=pct(ln_c,ln_m); bp=pct(br_c,br_m); mp=pct(mth_c,mth_m); ip=pct(inst_c,inst_m)
-            printf "| %s | Lines | %.2f%% | %d / %d |\n", icon(lp), lp, ln_c, ln_c+ln_m
-            printf "| %s | Branches | %.2f%% | %d / %d |\n", icon(bp), bp, br_c, br_c+br_m
-            printf "| %s | Methods | %.2f%% | %d / %d |\n", icon(mp), mp, mth_c, mth_c+mth_m
-            printf "| %s | Instructions | %.2f%% | %d / %d |\n", icon(ip), ip, inst_c, inst_c+inst_m
-          }' server/target/site/jacoco/jacoco.csv >> $GITHUB_STEP_SUMMARY
+            NR>1 {
+              inst_m+=$4; inst_c+=$5; br_m+=$6; br_c+=$7; ln_m+=$8; ln_c+=$9; mth_m+=$12; mth_c+=$13
+            }
+            END {
+              lp=pct(ln_c,ln_m); bp=pct(br_c,br_m); mp=pct(mth_c,mth_m); ip=pct(inst_c,inst_m)
+              printf "| %s | Lines | %.2f%% | %d / %d |\n", icon(lp), lp, ln_c, ln_c+ln_m
+              printf "| %s | Branches | %.2f%% | %d / %d |\n", icon(bp), bp, br_c, br_c+br_m
+              printf "| %s | Methods | %.2f%% | %d / %d |\n", icon(mp), mp, mth_c, mth_c+mth_m
+              printf "| %s | Instructions | %.2f%% | %d / %d |\n", icon(ip), ip, inst_c, inst_c+inst_m
+            }
+          ' server/target/site/jacoco/jacoco.csv >> $GITHUB_STEP_SUMMARY
 
   client:
     name: Client Build & Test
