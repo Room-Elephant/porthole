@@ -10,7 +10,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   server:
@@ -139,6 +138,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set image name
+        id: image
+        run: echo "name=${{ github.repository }}" | tr '[:upper:]' '[:lower:]' | xargs -I {} echo "name={}" >> $GITHUB_OUTPUT
+
       - name: Download amd64 native executable
         uses: actions/download-artifact@v4
         with:
@@ -176,7 +179,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}
           tags: |
             type=raw,value=${{ steps.version.outputs.tag }}
             type=semver,pattern={{version}},value=${{ steps.version.outputs.tag }}
@@ -192,7 +195,7 @@ jobs:
           build-args: |
             TARGETARCH=amd64
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}-amd64
+          tags: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ steps.version.outputs.tag }}-amd64
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Build and push arm64 image
@@ -204,19 +207,19 @@ jobs:
           build-args: |
             TARGETARCH=arm64
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}-arm64
+          tags: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ steps.version.outputs.tag }}-arm64
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Create and push manifest
         run: |
-          docker buildx imagetools create -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }} \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}-amd64 \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}-arm64
+          docker buildx imagetools create -t ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ steps.version.outputs.tag }} \
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ steps.version.outputs.tag }}-amd64 \
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ steps.version.outputs.tag }}-arm64
           
           if [[ "${{ steps.version.outputs.is_prerelease }}" == "false" ]]; then
-            docker buildx imagetools create -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
-              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}-amd64 \
-              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}-arm64
+            docker buildx imagetools create -t ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:latest \
+              ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ steps.version.outputs.tag }}-amd64 \
+              ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ steps.version.outputs.tag }}-arm64
           fi
 
       - name: Create GitHub Release
