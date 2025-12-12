@@ -51,24 +51,15 @@ jobs:
         working-directory: server
         run: mvn test -B
 
-      - name: Add coverage to PR
-        uses: madrapps/jacoco-report@v1.7.2
-        if: github.event_name == 'pull_request'
-        with:
-          paths: server/target/site/jacoco/jacoco.xml
-          token: ${{ secrets.GITHUB_TOKEN }}
-          min-coverage-overall: 80
-          min-coverage-changed-files: 80
-          title: Server Coverage
-          update-comment: true
-
       - name: Generate coverage summary
-        uses: cicirello/jacoco-badge-generator@v2
+        uses: PavanMudigonda/jacoco-reporter@v5.1
         with:
-          jacoco-csv-file: server/target/site/jacoco/jacoco.csv
-          generate-summary: true
-          generate-branches-badge: false
-          generate-coverage-badge: false
+          coverage_results_path: server/target/site/jacoco/jacoco.xml
+          coverage_report_name: Server Coverage
+          coverage_report_title: Server Coverage
+          skip_check_run: true
+          minimum_coverage: 80
+          fail_below_threshold: false
 
   client:
     name: Client Build & Test
@@ -98,6 +89,7 @@ jobs:
         uses: davelosert/vitest-coverage-report-action@v2
         with:
           working-directory: client
+          comment-on: none
 
       - name: Build application
         working-directory: client
