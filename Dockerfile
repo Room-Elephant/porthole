@@ -1,7 +1,7 @@
 # Dockerfile for CI/production builds
-# Uses pre-built JAR from Maven build with copy-client profile
+# Uses pre-built native executable from GitHub Actions
 
-FROM eclipse-temurin:25-jre-alpine
+FROM alpine:3.21
 
 # Create non-root user
 RUN addgroup -g 1000 porthole && \
@@ -9,8 +9,8 @@ RUN addgroup -g 1000 porthole && \
 
 WORKDIR /app
 
-# Copy the pre-built JAR from Maven build
-COPY --chown=porthole:porthole server/target/porthole-0.0.1-SNAPSHOT.jar app.jar
+# Copy the pre-built native executable
+COPY --chown=porthole:porthole server/target/porthole porthole
 
 # Copy config templates for user overrides
 COPY --chown=porthole:porthole config/ /app/config/
@@ -22,8 +22,8 @@ USER porthole
 EXPOSE 9753
 
 # Health check using Spring Actuator
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:9753/actuator/health || exit 1
 
-# Run the application with external config
-CMD ["java", "-jar", "app.jar", "--spring.config.additional-location=file:/app/config/"]
+# Run the native application with external config
+CMD ["./porthole", "--spring.config.additional-location=file:/app/config/"]
