@@ -1,45 +1,57 @@
-# Multi-stage build for GraalVM native image (multi-platform)
+# Client Build Stage
+FROM node:24-alpine AS client-build
+WORKDIR /app/client
+COPY client/package*.json ./
+RUN npm ci
+COPY client/ ./
+RUN npm run build
 
-# Stage 1: Build native executable
-FROM ghcr.io/graalvm/native-image-community:25-muslib AS build
+# Server Build Stage (Native)
+FROM ghcr.io/graalvm/native-image-community:25-muslib AS server-build
+WORKDIR /app/server
 
 # Install Maven
 RUN microdnf install -y maven && microdnf clean all
 
-WORKDIR /app
-
-# Copy pom.xml and download dependencies (cached layer)
-COPY server/pom.xml ./
+# Copy pom.xml and download dependencies
+COPY server/pom.xml .
 RUN mvn dependency:go-offline -B
-
-# Copy pre-built client dist
-COPY client/dist ./client-dist
 
 # Copy server source
 COPY server/src ./src
 
-# Build native image
-RUN mkdir -p target/classes/static && \
-    cp -r client-dist/* target/classes/static/ && \
-    mvn -Pnative native:compile -DskipTests -B
+# Copy built client from previous stage
+# The 'copy-client' profile expects ../client/dist relative to the server dir
+COPY --from=client-build /app/client/dist ../client/dist
 
-# Stage 2: Runtime
+# Build native image
+# -Pnative activates the native profile
+# -Pcopy-client activtes the maven-resources-plugin to copy the client dist
+# 'package' phase ensures 'prepare-package' (copy-client) runs before native compilation
+RUN mvn -Pnative,copy-client package -DskipTests -B
+
+# Runtime Stage
 FROM alpine:3.21
 
-# Create non-root user
-RUN addgroup -g 1000 porthole && \
-    adduser -u 1000 -G porthole -s /bin/sh -D porthole
+# Create non-root user (UID/GID 65532) and ensure permissions for Docker socket
+# - 'root' group (0): often owns /var/run/docker.sock
+# - 'daemon' group (1): historically used for docker in some setups
+RUN addgroup -g 65532 nonroot && \
+    adduser -u 65532 -G nonroot -s /bin/false -D nonroot && \
+    addgroup nonroot root && \
+    addgroup nonroot daemon
 
 WORKDIR /app
 
 # Copy the native executable from build stage
-COPY --from=build --chown=porthole:porthole /app/target/porthole porthole
+# Note: The artifact name from native-maven-plugin defaults to project.artifactId (porthole)
+COPY --from=server-build --chown=nonroot:nonroot /app/server/target/porthole porthole
 
-# Copy config templates for user overrides
-COPY --chown=porthole:porthole config/ /app/config/
+# Copy config templates
+COPY --chown=nonroot:nonroot config/ /app/config/
 
 # Switch to non-root user
-USER porthole
+USER nonroot
 
 # Expose the port
 EXPOSE 9753
@@ -48,5 +60,5 @@ EXPOSE 9753
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:9753/actuator/health || exit 1
 
-# Run the native application with external config
-CMD ["./porthole", "--spring.config.additional-location=file:/app/config/"]
+# Run the native application
+ENTRYPOINT ["./porthole", "--spring.config.additional-location=file:/app/config/"]
