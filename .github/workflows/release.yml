@@ -82,13 +82,19 @@ jobs:
           path: client/coverage/
           retention-days: 7
 
-  docker:
-    name: Build & Push Docker Image
-    runs-on: ubuntu-latest
+  build-native:
+    name: Build Native (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
     needs: [server, client]
-    permissions:
-      contents: write
-      packages: write
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+            platform: linux/amd64
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            platform: linux/arm64
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -99,8 +105,51 @@ jobs:
           name: client-dist
           path: client/dist/
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '25'
+          distribution: 'graalvm-community'
+          cache: maven
+
+      - name: Copy client to static resources
+        run: |
+          mkdir -p server/target/classes/static
+          cp -r client/dist/* server/target/classes/static/
+
+      - name: Build native image
+        working-directory: server
+        run: mvn -Pnative,copy-client native:compile -DskipTests -B
+
+      - name: Upload native executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.arch }}
+          path: server/target/porthole
+          retention-days: 1
+
+  docker:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: [build-native]
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download amd64 native executable
+        uses: actions/download-artifact@v4
+        with:
+          name: native-amd64
+          path: native/amd64/
+
+      - name: Download arm64 native executable
+        uses: actions/download-artifact@v4
+        with:
+          name: native-arm64
+          path: native/arm64/
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -116,11 +165,9 @@ jobs:
         id: version
         run: |
           if [[ "${{ github.event_name }}" == "push" ]]; then
-            # Tag push: use tag as-is (e.g., v1.0.0)
             echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
             echo "is_prerelease=false" >> $GITHUB_OUTPUT
           else
-            # Pull request: use 0.0.0-beta
             echo "tag=v0.0.0-beta" >> $GITHUB_OUTPUT
             echo "is_prerelease=true" >> $GITHUB_OUTPUT
           fi
@@ -136,16 +183,41 @@ jobs:
             type=semver,pattern={{major}}.{{minor}},value=${{ steps.version.outputs.tag }},enable=${{ steps.version.outputs.is_prerelease == 'false' }}
             type=raw,value=latest,enable=${{ steps.version.outputs.is_prerelease == 'false' }}
 
-      - name: Build and push Docker image
+      - name: Build and push amd64 image
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          file: Dockerfile.ci
+          platforms: linux/amd64
+          build-args: |
+            TARGETARCH=amd64
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}-amd64
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+
+      - name: Build and push arm64 image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.ci
+          platforms: linux/arm64
+          build-args: |
+            TARGETARCH=arm64
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}-arm64
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Create and push manifest
+        run: |
+          docker buildx imagetools create -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }} \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}-amd64 \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}-arm64
+          
+          if [[ "${{ steps.version.outputs.is_prerelease }}" == "false" ]]; then
+            docker buildx imagetools create -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}-amd64 \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}-arm64
+          fi
 
       - name: Create GitHub Release
         if: github.event_name == 'push'
