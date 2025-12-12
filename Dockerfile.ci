@@ -1,33 +1,19 @@
 # CI Dockerfile - uses pre-built native executables from GitHub Actions
 ARG TARGETARCH
 
-FROM alpine:3.21
+FROM gcr.io/distroless/base-debian12:nonroot
 
 ARG TARGETARCH
-
-# Create non-root user
-RUN addgroup -g 1000 porthole && \
-    adduser -u 1000 -G porthole -s /bin/sh -D porthole
 
 WORKDIR /app
 
 # Copy the pre-built native executable for the target architecture
-COPY --chown=porthole:porthole native/${TARGETARCH}/porthole porthole
-RUN chmod +x porthole
-
-# Copy config templates for user overrides
-COPY --chown=porthole:porthole config/ /app/config/
-
-# Switch to non-root user
-USER porthole
+COPY --chown=nonroot:nonroot native/${TARGETARCH}/porthole porthole
+COPY --chown=nonroot:nonroot config/ /app/config/
 
 # Expose the port
 EXPOSE 9753
 
-# Health check using Spring Actuator
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:9753/actuator/health || exit 1
-
 # Run the native application with external config
-CMD ["./porthole", "--spring.config.additional-location=file:/app/config/"]
+ENTRYPOINT ["./porthole", "--spring.config.additional-location=file:/app/config/"]
 
