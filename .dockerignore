@@ -1,5 +1,4 @@
 **/target
-!server/target/porthole
 **/node_modules
 **.class
 **.jar
