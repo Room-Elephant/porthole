@@ -1,6 +1,6 @@
 # Porthole ⚓️
 
-![Porthole](docs/images/porthole.webp)
+![Porthole](docs/images/porthole.png)
 
 > A modern, lightweight dashboard for your local Docker containers.
 
