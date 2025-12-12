@@ -140,7 +140,7 @@ jobs:
 
       - name: Set image name
         id: image
-        run: echo "name=${{ github.repository }}" | tr '[:upper:]' '[:lower:]' | xargs -I {} echo "name={}" >> $GITHUB_OUTPUT
+        run: echo "name=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
       - name: Download amd64 native executable
         uses: actions/download-artifact@v4
