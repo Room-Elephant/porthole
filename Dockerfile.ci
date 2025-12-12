@@ -1,14 +1,22 @@
 # CI Dockerfile - uses pre-built native executables from GitHub Actions
 ARG TARGETARCH
 
-FROM gcr.io/distroless/base-debian12:nonroot
+# Stage 1: Set permissions (distroless can't run chmod)
+FROM busybox:1.37 AS permissions
 
 ARG TARGETARCH
 
 WORKDIR /app
+COPY native/${TARGETARCH}/porthole porthole
+RUN chmod +x porthole
 
-# Copy the pre-built native executable for the target architecture
-COPY --chown=nonroot:nonroot native/${TARGETARCH}/porthole porthole
+# Stage 2: Runtime
+FROM gcr.io/distroless/base-debian12:nonroot
+
+WORKDIR /app
+
+# Copy executable with correct permissions from permissions stage
+COPY --from=permissions --chown=nonroot:nonroot /app/porthole porthole
 COPY --chown=nonroot:nonroot config/ /app/config/
 
 # Expose the port
@@ -16,4 +24,3 @@ EXPOSE 9753
 
 # Run the native application with external config
 ENTRYPOINT ["./porthole", "--spring.config.additional-location=file:/app/config/"]
-
