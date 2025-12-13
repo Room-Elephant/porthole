@@ -2,10 +2,12 @@ package com.roomelephant.porthole.service;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.InspectContainerResponse;
+import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.ContainerConfig;
 import com.roomelephant.porthole.component.RegistryService;
 import com.roomelephant.porthole.model.VersionDTO;
 import com.roomelephant.porthole.util.ImageUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
@@ -15,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class VersionService {
 
@@ -33,8 +36,12 @@ public class VersionService {
         InspectContainerResponse container;
         try {
             container = dockerClient.inspectContainerCmd(containerId).exec();
-        } catch (Exception _) {
+        } catch (NotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Container not found: " + containerId);
+        } catch (Exception e) {
+            log.error("Failed to inspect container {}", containerId, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to inspect container: " + containerId);
         }
 
         var config = container.getConfig();
@@ -121,7 +128,8 @@ public class VersionService {
         return null;
     }
 
-    private boolean checkForUpdate(@NonNull String imageFull, @Nullable String currentVersion, @Nullable String latestVersion, @NonNull List<String> repoDigests) {
+    private boolean checkForUpdate(@NonNull String imageFull, @Nullable String currentVersion,
+            @Nullable String latestVersion, @NonNull List<String> repoDigests) {
         String tag = ImageUtils.extractTag(imageFull);
 
         try {
@@ -143,4 +151,3 @@ public class VersionService {
         return false;
     }
 }
-
