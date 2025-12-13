@@ -105,7 +105,7 @@ jobs:
         id: version
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "clean_version=0.0.3-pr-test" >> $GITHUB_OUTPUT
+            echo "clean_version=0.0.4-pr-test" >> $GITHUB_OUTPUT
           else
             echo "clean_version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
           fi
@@ -177,7 +177,7 @@ jobs:
         id: version
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "clean_version=0.0.0-pr-test" >> $GITHUB_OUTPUT
+            echo "clean_version=0.0.4-pr-test" >> $GITHUB_OUTPUT
           else
             echo "clean_version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
           fi
