@@ -4,6 +4,9 @@ on:
   push:
     tags:
       - 'v*'
+  pull_request:
+    branches:
+      - main
 
 env:
   REGISTRY: ghcr.io
@@ -98,11 +101,18 @@ jobs:
           distribution: 'graalvm-community'
           cache: maven
 
+      - name: Calculate Version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "clean_version=0.0.3-pr-test" >> $GITHUB_OUTPUT
+          else
+            echo "clean_version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Set project version
         working-directory: server
-        run: |
-          clean_version="${GITHUB_REF_NAME#v}"
-          mvn versions:set -DnewVersion=${clean_version} -DgenerateBackupPoms=false
+        run: mvn versions:set -DnewVersion=${{ steps.version.outputs.clean_version }} -DgenerateBackupPoms=false
 
       - name: Build native image
         working-directory: server
@@ -131,7 +141,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}
           tags: |
-            type=raw,value=${{ github.ref_name }}-${{ matrix.arch }}
+            type=raw,value=${{ steps.version.outputs.clean_version }}-${{ matrix.arch }}
 
       - name: Build and push by digest
         id: build
@@ -163,24 +173,37 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Calculate Version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "clean_version=0.0.0-pr-test" >> $GITHUB_OUTPUT
+          else
+            echo "clean_version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create and push manifest
         run: |
+          VERSION=${{ steps.version.outputs.clean_version }}
+
           # Create manifest for the version tag
-          docker buildx imagetools create -t ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ github.ref_name }} \
-            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ github.ref_name }}-amd64 \
-            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ github.ref_name }}-arm64
-          
-          # Create manifest for latest tag if it looks like a stable release (no hyphen)
-          if [[ "${{ github.ref_name }}" != *"-"* ]]; then
+          docker buildx imagetools create -t ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:$VERSION \
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:$VERSION-amd64 \
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:$VERSION-arm64
+
+          # Create manifest for latest tag if it looks like a stable release (no hyphen) AND not a PR
+          if [[ "${{ github.event_name }}" != "pull_request" && "$VERSION" != *"-"* ]]; then
             docker buildx imagetools create -t ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:latest \
-              ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ github.ref_name }}-amd64 \
-              ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ github.ref_name }}-arm64
+              ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:$VERSION-amd64 \
+              ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:$VERSION-arm64
           fi
 
       - name: Create GitHub Release
+        if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v1
         with:
           name: Release ${{ github.ref_name }}
           generate_release_notes: true
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
+
