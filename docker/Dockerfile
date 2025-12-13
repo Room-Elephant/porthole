@@ -8,8 +8,7 @@ LABEL org.opencontainers.image.licenses=MIT
 RUN apt-get update && apt-get install -y wget gosu && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd -g 65532 nonroot && \
-    useradd -u 65532 -g nonroot -s /bin/false nonroot && \
-    usermod -aG root,daemon nonroot
+    useradd -u 65532 -g nonroot -s /bin/false nonroot
 
 WORKDIR /app
 

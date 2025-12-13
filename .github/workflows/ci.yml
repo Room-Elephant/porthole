@@ -112,7 +112,7 @@ jobs:
         run: npm run build
 
   docker-test:
-    name: Docker Build Check
+    name: Docker Build & Test
     runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.docker == 'true'
@@ -124,5 +124,8 @@ jobs:
         run: touch porthole
 
       - name: Build Docker image
-        run: docker build -f docker/Dockerfile .
+        run: docker build -t porthole:ci-test -f docker/Dockerfile .
+
+      - name: Run Entrypoint Tests
+        run: ./docker/test_entrypoint.sh porthole:ci-test
 
