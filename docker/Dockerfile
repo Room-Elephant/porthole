@@ -21,7 +21,8 @@ WORKDIR /app
 COPY --chown=nonroot:nonroot porthole porthole
 
 # Copy config templates
-COPY --chown=nonroot:nonroot config/ /app/config/
+COPY --chown=nonroot:nonroot docker/templates/ /app/config/
+
 
 # Copy and setup entrypoint
 COPY --chmod=755 docker/entrypoint.sh /app/entrypoint.sh

@@ -46,7 +46,8 @@ WORKDIR /app
 COPY --from=build /app/server/target/porthole-0.0.1-SNAPSHOT.jar app.jar
 
 # Copy config templates for user overrides
-COPY config/ /app/config/
+COPY docker/templates/ /app/config/
+
 
 # Expose the port
 EXPOSE 9753

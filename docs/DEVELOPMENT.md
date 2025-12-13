@@ -17,12 +17,14 @@ For deeper technical details on how Porthole works, see the [Architecture](ARCHI
 .
 ├── client/             # React frontend (Vite + React 19)
 ├── server/             # Spring Boot backend (Java 25)
-├── config/             # Template configuration files
+├── docker/             # Docker configuration
+│   ├── templates/      # Template configuration files
+│   ├── Dockerfile      # CI/production Dockerfile (uses pre-built JAR)
+│   └── entrypoint.sh   # Entrypoint script
 ├── dev/                # Development Docker files
 │   ├── Dockerfile      # Multi-stage build for local development
 │   └── compose.yml     # Development compose file
-├── docs/               # Documentation
-└── Dockerfile          # CI/production Dockerfile (uses pre-built JAR)
+└── docs/               # Documentation
 ```
 
 Porthole is built as a **GraalVM native image**. The React client is bundled into the Spring Boot backend, which is then compiled to a native executable for fast startup and low memory usage.
@@ -101,7 +103,7 @@ docker compose -f dev/compose.yml up --build
 
 The development Dockerfile uses a multi-stage build that automatically builds both client and server. Dependencies are cached for faster rebuild times.
 
-For CI/production, the root `Dockerfile` expects a pre-built native executable (built with `mvn -Pnative,copy-client native:compile`).
+For CI/production, the `docker/Dockerfile` expects a pre-built native executable (built with `mvn -Pnative,copy-client native:compile`).
 
 ## Running Locally
 
