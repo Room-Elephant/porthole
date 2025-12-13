@@ -6,7 +6,7 @@ For deeper technical details on how Porthole works, see the [Architecture](ARCHI
 
 ## Prerequisites
 
-- Java 25+
+- Java 25+ (GraalVM required for native builds)
 - Maven
 - Node.js 24+ and npm
 - Docker
@@ -25,7 +25,7 @@ For deeper technical details on how Porthole works, see the [Architecture](ARCHI
 └── Dockerfile          # CI/production Dockerfile (uses pre-built JAR)
 ```
 
-Porthole is a **Single JAR** application. The React client is built and bundled into the Spring Boot backend during the Maven build process.
+Porthole is built as a **GraalVM native image**. The React client is bundled into the Spring Boot backend, which is then compiled to a native executable for fast startup and low memory usage.
 
 ## Building from Source
 
@@ -52,7 +52,7 @@ npm run build
 
 The built client will be in `client/dist/`.
 
-### Full Application
+### Full Application (JAR)
 
 Build the complete application with client bundled into the backend JAR:
 
@@ -70,6 +70,23 @@ cd server
 mvn clean package -DskipTests -Pcopy-client
 ```
 
+### Native Image
+
+Build a GraalVM native executable for faster startup and lower memory usage:
+
+```bash
+# Build client first
+cd client && npm run build && cd ..
+
+# Build native image with client bundled
+cd server
+mvn -Pnative,copy-client native:compile -DskipTests
+```
+
+The native executable will be in `server/target/porthole`. First compilation takes 3-5 minutes; subsequent builds are faster with caching.
+
+**Requirements**: GraalVM JDK 25+ must be installed and configured as your JAVA_HOME.
+
 ### Docker Image
 
 For local development, use the multi-stage Dockerfile in `dev/`:
@@ -84,9 +101,15 @@ docker compose -f dev/compose.yml up --build
 
 The development Dockerfile uses a multi-stage build that automatically builds both client and server. Dependencies are cached for faster rebuild times.
 
-For CI/production, the root `Dockerfile` expects a pre-built JAR (built with `mvn package -Pcopy-client`).
+For CI/production, the root `Dockerfile` expects a pre-built native executable (built with `mvn -Pnative,copy-client native:compile`).
 
 ## Running Locally
+
+### From Native Executable
+
+```bash
+./server/target/porthole --spring.profiles.active=local
+```
 
 ### From JAR
 
@@ -172,7 +195,9 @@ Runs when a version tag (e.g., `v1.0.0`) is pushed:
 
 - **Server job**: Builds and tests the Spring Boot backend with JaCoCo coverage
 - **Client job**: Installs, tests, and builds the React frontend with Vitest coverage
-- **Docker job**: Creates the Docker image and GitHub Release
+- **Docker job**: Builds GraalVM native image, pushes Docker image to `ghcr.io`, and creates GitHub Release
+
+The Docker image is published to GitHub Container Registry at `ghcr.io/<owner>/porthole`.
 
 See `.github/workflows/release.yml` for the full workflow definition.
 

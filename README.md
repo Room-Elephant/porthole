@@ -29,7 +29,7 @@ docker run -d \
   -p 9753:9753 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   --name porthole \
-  porthole
+  ghcr.io/roomelephant/porthole:latest
 ```
 
 **Note**: Mounting `/var/run/docker.sock` is required for Porthole to see your other containers.
@@ -53,7 +53,8 @@ Mount the entire config directory or individual files:
 docker run -d -p 9753:9753 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v $(pwd)/config:/app/config \
-  --name porthole porthole
+  --name porthole \
+  ghcr.io/roomelephant/porthole:latest
 ```
 
 See [Configuration Guide](docs/CONFIGURATION.md) for all options.

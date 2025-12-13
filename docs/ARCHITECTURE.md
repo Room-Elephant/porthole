@@ -22,13 +22,13 @@ Porthole is designed as a monolithic, single-artifact application for simplicity
 
 ## Build Process
 
-We use a "Client-First" build strategy integrated into Maven:
+We use a "Client-First" build strategy integrated into Maven, producing a GraalVM native executable:
 
 1.  **Client Build**: The `frontend-maven-plugin` runs `npm install` and `npm run build` in the `client/` directory.
 2.  **Resource Copying**: The `maven-resources-plugin` copies the contents of `client/dist` into `server/target/classes/static`.
-3.  **JAR Packaging**: Spring Boot packages everything into a single executable JAR.
+3.  **Native Compilation**: GraalVM compiles the application into a native executable using the `native-maven-plugin`.
 
-This allows the final Docker image to just run `java -jar app.jar` without needing Node.js or a separate web server (Nginx) in the runtime container.
+This allows the final Docker image to run a single native binary without needing a JVM, resulting in faster startup (~50-100ms) and lower memory usage.
 
 ## Container Status
 

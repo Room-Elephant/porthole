@@ -9,11 +9,14 @@ server:
 spring:
   application:
     name: porthole
+    title: Porthole
+    version: "@project.version@"
   threads:
     virtual:
       enabled: true
   lifecycle:
     timeout-per-shutdown-phase: 20s
+  banner.location: classpath:/banner.txt
 
 # Docker configuration
 docker:
