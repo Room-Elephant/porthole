@@ -13,6 +13,8 @@ on:
 jobs:
   server:
     uses: ./.github/workflows/reusable-server.yml
+    permissions:
+      contents: read
     with:
       upload_coverage: true
 

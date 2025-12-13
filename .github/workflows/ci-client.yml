@@ -13,6 +13,8 @@ on:
 jobs:
   client:
     uses: ./.github/workflows/reusable-client.yml
+    permissions:
+      contents: read
     with:
       upload_coverage: true
 

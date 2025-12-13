@@ -13,3 +13,5 @@ on:
 jobs:
   docker:
     uses: ./.github/workflows/reusable-docker.yml
+    permissions:
+      contents: read
