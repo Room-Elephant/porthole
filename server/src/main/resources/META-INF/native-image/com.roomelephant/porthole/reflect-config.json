@@ -218,6 +218,13 @@
     "allDeclaredFields": true
   },
   {
+    "name": "com.github.dockerjava.api.model.LogConfig$LoggingType",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
+  },
+  {
     "name": "com.github.dockerjava.api.model.RestartPolicy",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true,
