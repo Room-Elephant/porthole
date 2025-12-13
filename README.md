@@ -2,7 +2,7 @@
 
 ![Porthole](docs/images/porthole.webp)
 
-> A modern, lightweight dashboard for your local Docker containers.
+> Centralized dashboard for running Docker containers with automatic port discovery.
 
 ![Porthole Screenshot](docs/images/screenshot.png)
 

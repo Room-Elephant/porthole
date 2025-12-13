@@ -12,7 +12,7 @@
     <artifactId>porthole</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>porthole</name>
-    <description>A modern, lightweight dashboard for your local Docker containers.</description>
+    <description>Centralized dashboard for running Docker containers with automatic port discovery.</description>
 
     <properties>
         <java.version>25</java.version>

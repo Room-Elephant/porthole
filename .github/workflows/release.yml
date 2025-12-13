@@ -7,6 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
+  IMAGE_DESCRIPTION: "Centralized dashboard for running Docker containers with automatic port discovery."
 
 jobs:
   client:
@@ -136,7 +137,7 @@ jobs:
             type=raw,value=${{ steps.version.outputs.clean_version }}-${{ matrix.arch }}
           labels: |
             org.opencontainers.image.title=Porthole
-            org.opencontainers.image.description=A modern, lightweight dashboard for your local Docker containers.
+            org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
 
       - name: Build and push by digest
@@ -184,7 +185,7 @@ jobs:
           # Create manifest for the version tag
           docker buildx imagetools create \
             --annotation "org.opencontainers.image.title=Porthole" \
-            --annotation "org.opencontainers.image.description=A modern, lightweight dashboard for your local Docker containers." \
+            --annotation "org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}" \
             --annotation "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
             -t ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:$VERSION \
             ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:$VERSION-amd64 \
@@ -194,7 +195,7 @@ jobs:
           if [[ "$VERSION" != *"-"* ]]; then
             docker buildx imagetools create \
               --annotation "org.opencontainers.image.title=Porthole" \
-              --annotation "org.opencontainers.image.description=A modern, lightweight dashboard for your local Docker containers." \
+              --annotation "org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}" \
               --annotation "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
               -t ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:latest \
               ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:$VERSION-amd64 \
