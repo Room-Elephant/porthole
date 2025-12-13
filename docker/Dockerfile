@@ -1,7 +1,3 @@
-# Runtime Stage
-# We use debian:bookworm-slim because the binary is linked against glibc (from the build stage),
-# which makes it incompatible with Alpine (musl) unless we did complex static linking.
-# Bookworm-slim is stable, multi-arch, and relatively small (~75MB).
 FROM debian:bookworm-slim
 
 # Install wget (healthcheck) and gosu (for privilege dropping)
