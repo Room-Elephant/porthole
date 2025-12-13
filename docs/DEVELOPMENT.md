@@ -164,6 +164,21 @@ npm run test:run      # Single run
 npm run test:coverage # With coverage report
 ```
 
+### Docker Entrypoint Tests
+
+The project includes a dedicated script to test the Docker entrypoint logic (e.g., dynamic socket group handling). This script builds a test image and runs scenarios to verify correct permission handling.
+
+```bash
+# Build the test image first
+docker build -t porthole:ci-test -f docker/Dockerfile .
+
+# Run entrypoint tests locally
+./docker/test_entrypoint.sh
+```
+
+> [!NOTE]
+> Running this script locally may prompt for your `sudo` password to create and set permissions for a mock Docker socket.
+
 ## Development Workflow
 
 For active development, you can run the client and server separately:
@@ -188,6 +203,7 @@ Runs on push/PR to `main`. Detects which parts of the codebase changed and only 
 
 - **Server job**: Builds and tests the Spring Boot backend (skipped if no `server/` changes)
 - **Client job**: Builds and tests the React frontend (skipped if no `client/` changes)
+- **Docker job**: Verifies the Docker image build (skipped if no `docker/` changes)
 
 See `.github/workflows/ci.yml` for the full workflow definition.
 
@@ -212,19 +228,24 @@ We use **`debian:bookworm-slim`** for the runtime image instead of Alpine.
 - **Trade-off**: Bookworm-slim offers a stable, multi-arch foundation and is relatively small (~75MB), providing a good balance between size and compatibility.
 
 ### Permissions & Security
-To run securely as a non-root user while accessing the Docker socket:
+
+To run the application as a non-root user while minimising container-level privileges and enabling optional access to the host Docker daemon:
 
 1. **Build Time**:
    - Creates a `nonroot` user with UID/GID 65532.
-   - Adds this user to `root` (GID 0) and `daemon` (GID 1) groups, as these historically or commonly own `/var/run/docker.sock`.
+   - **No privileged group memberships are baked into the image.**
 
 2. **Run Time (Entrypoint)**:
-   - The container starts as `root` (via `entrypoint.sh`) to perform setup.
-   - **Socket Detection**: Checks the GID of the mounted `/var/run/docker.sock`.
-   - **Dynamic Permissions**:
-     - If the socket is owned by a GID that doesn't exist (e.g., 998), it dynamically creates a group for it.
-     - Adds the `nonroot` user to this new group.
-   - **Privilege Drop**: Finally, uses `gosu` to switch to the `nonroot` user before executing the main application.
+   - The container starts as `root` to perform one-time setup.
+   - **Docker Socket Detection**: If `/var/run/docker.sock` is mounted, the entrypoint inspects its owning GID.
+   - **Dynamic Group Reconciliation**:
+     - If the socket’s GID does not exist in the container, a group (`dockersock-<GID>`) is created.
+     - The `nonroot` user is added to this group if not already a member.
+   - **Access Verification**: A read/write check is performed to warn about potential permission issues.
+   - **Privilege Drop**: The entrypoint switches to the `nonroot` user via `gosu` before launching the application.
 
-This ensures the application process itself runs without root privileges but still has the exact access needed to talk to the host's Docker daemon.
+The application process itself runs without root privileges and is granted only the minimum group access required to communicate with the host’s Docker daemon when the socket is mounted.
+
+> [!NOTE]
+> Access to `/var/run/docker.sock` effectively grants control over the host Docker daemon. This setup limits container privileges but does not provide isolation from the host.
 
