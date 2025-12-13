@@ -12,17 +12,23 @@ env:
 jobs:
   server-check:
     uses: ./.github/workflows/reusable-server.yml
+    permissions:
+      contents: read
     with:
       upload_coverage: false
 
   client-check:
     uses: ./.github/workflows/reusable-client.yml
+    permissions:
+      contents: read
     with:
       upload_coverage: false
       upload_artifact: true
 
   docker-check:
     uses: ./.github/workflows/reusable-docker.yml
+    permissions:
+      contents: read
 
   build-and-push:
     name: Build & Push (${{ matrix.arch }})
