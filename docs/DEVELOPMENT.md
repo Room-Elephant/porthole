@@ -235,11 +235,14 @@ To run the application as a non-root user while minimising container-level privi
 2. **Run Time (Entrypoint)**:
    - The container starts as `root` to perform one-time setup.
    - **Docker Socket Detection**: If `/var/run/docker.sock` is mounted, the entrypoint inspects its owning GID.
-   - **Dynamic Group Reconciliation**:
+   - **Root Ownership (GID 0)**:
+     - If the socket is owned by `root` (GID 0), often the case for Docker Desktop or rootless setups, the container **stays as root**.
+     - This ensures seamless access without complex group mapping in these environments.
+   - **Dynamic Group Reconciliation** (if GID != 0):
      - If the socket’s GID does not exist in the container, a group (`dockersock-<GID>`) is created.
      - The `nonroot` user is added to this group if not already a member.
+     - **Privilege Drop**: The entrypoint switches to the `nonroot` user via `gosu` before launching the application.
    - **Access Verification**: A read/write check is performed to warn about potential permission issues.
-   - **Privilege Drop**: The entrypoint switches to the `nonroot` user via `gosu` before launching the application.
 
 The application process itself runs without root privileges and is granted only the minimum group access required to communicate with the host’s Docker daemon when the socket is mounted.
 
