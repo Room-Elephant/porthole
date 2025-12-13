@@ -1,0 +1,21 @@
+name: CI - Server
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'server/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'server/**'
+
+jobs:
+  server:
+    uses: ./.github/workflows/reusable-server.yml
+    permissions:
+      contents: read
+    with:
+      upload_coverage: true
+
+
