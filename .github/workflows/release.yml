@@ -111,8 +111,15 @@ jobs:
         working-directory: server
         run: mvn -Pnative,copy-client package native:compile -DskipTests -B
 
-      - name: Move binary
-        run: cp server/target/porthole .
+      - name: Move and Rename binary
+        run: cp server/target/porthole porthole-linux-${{ matrix.arch }}
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.arch }}
+          path: porthole-linux-${{ matrix.arch }}
+          retention-days: 1
 
       - name: Set image name
         id: image
@@ -202,6 +209,12 @@ jobs:
               ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:$VERSION-arm64
           fi
 
+      - name: Download all binaries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: binary-*
+          merge-multiple: true
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -209,4 +222,7 @@ jobs:
           generate_release_notes: true
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
+          files: |
+            porthole-linux-amd64
+            porthole-linux-arm64
 
