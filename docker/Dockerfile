@@ -1,9 +1,9 @@
 FROM debian:bookworm-slim
 
-LABEL org.opencontainers.image.title="Porthole"
+LABEL org.opencontainers.image.title=Porthole
 LABEL org.opencontainers.image.description="A modern, lightweight dashboard for your local Docker containers."
-LABEL org.opencontainers.image.source="https://github.com/Room-Elephant/porthole"
-LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.source=https://github.com/Room-Elephant/porthole
+LABEL org.opencontainers.image.licenses=MIT
 
 RUN apt-get update && apt-get install -y wget gosu && rm -rf /var/lib/apt/lists/*
 
