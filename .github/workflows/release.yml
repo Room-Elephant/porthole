@@ -4,9 +4,6 @@ on:
   push:
     tags:
       - 'v*'
-  pull_request:
-    branches:
-      - main
 
 env:
   REGISTRY: ghcr.io
@@ -103,12 +100,7 @@ jobs:
 
       - name: Calculate Version
         id: version
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "clean_version=0.0.4-pr-test" >> $GITHUB_OUTPUT
-          else
-            echo "clean_version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
-          fi
+        run: echo "clean_version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
 
       - name: Set project version
         working-directory: server
@@ -142,6 +134,10 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}
           tags: |
             type=raw,value=${{ steps.version.outputs.clean_version }}-${{ matrix.arch }}
+          labels: |
+            org.opencontainers.image.title=Porthole
+            org.opencontainers.image.description=A modern, lightweight dashboard for your local Docker containers.
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
 
       - name: Build and push by digest
         id: build
@@ -175,12 +171,7 @@ jobs:
 
       - name: Calculate Version
         id: version
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "clean_version=0.0.4-pr-test" >> $GITHUB_OUTPUT
-          else
-            echo "clean_version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
-          fi
+        run: echo "clean_version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
 
       - name: Create and push manifest
         run: |
@@ -191,15 +182,14 @@ jobs:
             ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:$VERSION-amd64 \
             ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:$VERSION-arm64
 
-          # Create manifest for latest tag if it looks like a stable release (no hyphen) AND not a PR
-          if [[ "${{ github.event_name }}" != "pull_request" && "$VERSION" != *"-"* ]]; then
+          # Create manifest for latest tag if it looks like a stable release (no hyphen)
+          if [[ "$VERSION" != *"-"* ]]; then
             docker buildx imagetools create -t ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:latest \
               ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:$VERSION-amd64 \
               ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:$VERSION-arm64
           fi
 
       - name: Create GitHub Release
-        if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v1
         with:
           name: Release ${{ github.ref_name }}
