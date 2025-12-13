@@ -4,8 +4,8 @@
 # Bookworm-slim is stable, multi-arch, and relatively small (~75MB).
 FROM debian:bookworm-slim
 
-# Install wget for healthcheck
-RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+# Install wget (healthcheck) and gosu (for privilege dropping)
+RUN apt-get update && apt-get install -y wget gosu && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user (UID/GID 65532) and ensure permissions for Docker socket
 # - 'root' group (0): often owns /var/run/docker.sock
@@ -23,8 +23,8 @@ COPY --chown=nonroot:nonroot porthole porthole
 # Copy config templates
 COPY --chown=nonroot:nonroot config/ /app/config/
 
-# Switch to non-root user
-USER nonroot
+# Copy and setup entrypoint
+COPY --chmod=755 entrypoint.sh /app/entrypoint.sh
 
 # Expose the port
 EXPOSE 9753
@@ -33,5 +33,5 @@ EXPOSE 9753
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:9753/actuator/health || exit 1
 
-# Run the native application
-ENTRYPOINT ["./porthole", "--spring.config.additional-location=file:/app/config/"]
+# Run via entrypoint script which handles permissions and then switches user
+ENTRYPOINT ["/app/entrypoint.sh", "./porthole", "--spring.config.additional-location=file:/app/config/"]
