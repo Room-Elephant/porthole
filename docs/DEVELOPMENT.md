@@ -246,6 +246,65 @@ To run the application as a non-root user while minimising container-level privi
 
 The application process itself runs without root privileges and is granted only the minimum group access required to communicate with the host’s Docker daemon when the socket is mounted.
 
+
 > [!NOTE]
 > Access to `/var/run/docker.sock` effectively grants control over the host Docker daemon. This setup limits container privileges but does not provide isolation from the host.
+
+
+## Native Image Troubleshooting
+
+If you encounter `ClassNotFoundException`, `InvalidDefinitionException`, or other reflection-related errors when running the native image (especially with `docker-java` or Jackson), you can use the GraalVM Tracing Agent to automatically generate the missing configuration.
+
+### 1. Build the JAR
+
+Build the application as a standard uber-jar:
+
+```bash
+cd server
+mvn package -DskipTests
+```
+
+### 2. Run with Agent
+
+Run the jar with the `native-image-agent` attached. This agent will observe all reflection, JNI, and proxy usage and write the configuration to `agent-output`.
+
+```bash
+# Run on a different port to avoid conflicts if needed
+java -Dserver.port=9999 \
+  -agentlib:native-image-agent=config-output-dir=agent-output \
+  -jar server/target/porthole-0.0.1-SNAPSHOT.jar
+```
+
+### 3. Exercise the Application
+
+Critically, you must **exercise the code paths** that are failing. The agent only captures what is actually executed.
+
+1.  **List Containers**: `curl http://localhost:9999/api/containers`
+2.  **Inspect Container**: `curl http://localhost:9999/api/containers/{id}/version`
+3.  **Trigger Errors**: If the error happens during failure modes (e.g. 404), trigger those explicitly.
+
+### 4. Process and Apply Configuration
+
+The agent may generate a `reachability-metadata.json` or individual config files. If you get a single metadata file, you can extract the relevant reflection config using `jq`.
+
+**Filter for project classes:**
+
+```bash
+jq '.reflection 
+  | map(select(.type | strings)) 
+  | map(select(.type | test("com\\.github\\.dockerjava|com\\.roomelephant"; "i"))) 
+  | map(. + {name: .type} | del(.type))' \
+  agent-output/reachability-metadata.json > reflect-config.json
+```
+
+**Apply the config:**
+
+Move the generated file to the project's native image configuration directory:
+
+```bash
+mv reflect-config.json server/src/main/resources/META-INF/native-image/com.roomelephant/porthole/reflect-config.json
+```
+
+Rebuild the native image to apply valid changes.
+
 
