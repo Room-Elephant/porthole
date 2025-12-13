@@ -9,6 +9,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_DESCRIPTION: "Centralized dashboard for running Docker containers with automatic port discovery."
 
+jobs:
   server-check:
     uses: ./.github/workflows/reusable-server.yml
     with:
