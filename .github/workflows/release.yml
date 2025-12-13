@@ -9,66 +9,25 @@ env:
   REGISTRY: ghcr.io
   IMAGE_DESCRIPTION: "Centralized dashboard for running Docker containers with automatic port discovery."
 
-jobs:
-  client:
-    name: Build Client
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # Reuse testing logic
+  server-check:
+    uses: ./.github/workflows/reusable-server.yml
+    with:
+      upload_coverage: false
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: client/package-lock.json
+  client-check:
+    uses: ./.github/workflows/reusable-client.yml
+    with:
+      upload_coverage: false
+      upload_artifact: true
 
-      - name: Install dependencies
-        working-directory: client
-        run: npm ci
-
-      - name: Run tests with coverage
-        working-directory: client
-        run: npm run test:coverage
-
-      - name: Build application
-        working-directory: client
-        run: npm run build
-
-      - name: Upload client dist
-        uses: actions/upload-artifact@v4
-        with:
-          name: client-dist
-          path: client/dist/
-          retention-days: 1
-
-  server-test:
-    name: Test Server
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up GraalVM
-        uses: graalvm/setup-graalvm@v1
-        with:
-          java-version: '25'
-          distribution: 'graalvm-community'
-          cache: maven
-
-      - name: Run tests with coverage
-        working-directory: server
-        run: mvn verify -B
+  docker-check:
+    uses: ./.github/workflows/reusable-docker.yml
 
   build-and-push:
     name: Build & Push (${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
-    needs: [client, server-test]
+    needs: [server-check, client-check, docker-check]
     permissions:
       contents: read
       packages: write

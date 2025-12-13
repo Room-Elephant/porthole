@@ -1,0 +1,19 @@
+name: CI - Client
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'client/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'client/**'
+
+jobs:
+  client:
+    uses: ./.github/workflows/reusable-client.yml
+    with:
+      upload_coverage: true
+
+

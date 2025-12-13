@@ -1,0 +1,56 @@
+name: Reusable Server Workflow
+
+on:
+  workflow_call:
+    inputs:
+      upload_coverage:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  server-test:
+    name: Server Build & Test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build without tests
+        working-directory: server
+        run: mvn compile -DskipTests -B
+
+      - name: Run tests with coverage
+        working-directory: server
+        run: mvn test -B
+
+      - name: Generate coverage summary
+        if: ${{ inputs.upload_coverage }}
+        run: |
+          echo "## Coverage Report for server" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | Category | Percentage | Covered / Total |" >> $GITHUB_STEP_SUMMARY
+          echo "|:------:|----------|------------|-----------------|" >> $GITHUB_STEP_SUMMARY
+          awk -F, '
+            function pct(c,m) { return (c+m>0) ? c*100/(c+m) : 0 }
+            function icon(p,t) { return (p>=t) ? ":green_circle:" : (p>=t-10) ? ":large_blue_circle:" : ":red_circle:" }
+            NR>1 {
+              inst_m+=$4; inst_c+=$5; br_m+=$6; br_c+=$7; ln_m+=$8; ln_c+=$9; mth_m+=$12; mth_c+=$13
+            }
+            END {
+              lp=pct(ln_c,ln_m); bp=pct(br_c,br_m); mp=pct(mth_c,mth_m); ip=pct(inst_c,inst_m)
+              printf "| %s | Lines | %.2f%% (🎯 70%%) | %d / %d |\n", icon(lp,70), lp, ln_c, ln_c+ln_m
+              printf "| %s | Branches | %.2f%% (🎯 80%%) | %d / %d |\n", icon(bp,80), bp, br_c, br_c+br_m
+              printf "| %s | Methods | %.2f%% (🎯 80%%) | %d / %d |\n", icon(mp,80), mp, mth_c, mth_c+mth_m
+              printf "| %s | Instructions | %.2f%% (🎯 80%%) | %d / %d |\n", icon(ip,80), ip, inst_c, inst_c+inst_m
+            }
+          ' server/target/site/jacoco/jacoco.csv >> $GITHUB_STEP_SUMMARY

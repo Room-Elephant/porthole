@@ -1,0 +1,21 @@
+name: Reusable Docker Workflow
+
+on:
+  workflow_call:
+
+jobs:
+  docker-test:
+    name: Docker Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create dummy binary
+        run: touch porthole
+
+      - name: Build Docker image
+        run: docker build -t porthole:ci-test -f docker/Dockerfile .
+
+      - name: Run Entrypoint Tests
+        run: ./docker/test_entrypoint.sh porthole:ci-test

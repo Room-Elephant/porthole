@@ -1,0 +1,57 @@
+name: Reusable Client Workflow
+
+on:
+  workflow_call:
+    inputs:
+      upload_coverage:
+        required: false
+        type: boolean
+        default: false
+      upload_artifact:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  client-test:
+    name: Client Build & Test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Run tests with coverage
+        working-directory: client
+        run: npm run test:coverage
+
+      - name: Generate coverage summary
+        if: ${{ inputs.upload_coverage }}
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          working-directory: client
+          comment-on: none
+
+      - name: Build application
+        working-directory: client
+        run: npm run build
+
+      - name: Upload client dist
+        if: ${{ inputs.upload_artifact }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-dist
+          path: client/dist/
+          retention-days: 1
