@@ -19,10 +19,10 @@ For deeper technical details on how Porthole works, see the [Architecture](ARCHI
 ├── server/             # Spring Boot backend (Java 25)
 ├── docker/             # Docker configuration
 │   ├── templates/      # Template configuration files
-│   ├── Dockerfile      # CI/production Dockerfile (uses pre-built JAR)
+│   ├── Dockerfile       # CI/production Dockerfile (uses pre-built native executable)
 │   └── entrypoint.sh   # Entrypoint script
 ├── dev/                # Development Docker files
-│   ├── Dockerfile      # Multi-stage build for local development
+│   ├── Dockerfile       # Multi-stage build for local development
 │   └── compose.yml     # Development compose file
 └── docs/               # Documentation
 ```
@@ -127,13 +127,6 @@ docker run -p 9753:9753 -v /var/run/docker.sock:/var/run/docker.sock porthole:la
 
 Access the application at [http://localhost:9753](http://localhost:9753)
 
-### IntelliJ IDEA
-
-Pre-configured run configurations are available in `server/.run/`:
-
-- **Porthole java local** - Runs the application with the `local` profile
-- **Porthole container** - Remote debugging for containerized application (port 5005)
-
 ## Testing
 
 ### Server Tests
@@ -142,15 +135,8 @@ Run the Spring Boot backend tests:
 
 ```bash
 cd server
-mvn test
-```
-
-Generate a coverage report:
-
-```bash
-cd server
-mvn verify
-# Report available at server/target/site/jacoco/index.html
+mvn test   # Single run
+mvn verify # Report available at server/target/site/jacoco/index.html
 ```
 
 ### Client Tests
@@ -188,6 +174,11 @@ For active development, you can run the client and server separately:
    mvn spring-boot:run
    ```
 
+Or use IntelliJ IDEA Pre-configured run configurations available in `server/.run/`:
+
+- **Porthole java local** - Runs the application with the `local` profile
+- **Porthole container** - Remote debugging for containerized application (port 5005)
+
 2. **Start the client dev server** (from `client/`):
    ```bash
    npm run dev
@@ -211,18 +202,24 @@ See `.github/workflows/ci.yml` for the full workflow definition.
 
 Runs when a version tag (e.g., `v1.0.0`) is pushed:
 
-- **Server job**: Builds and tests the Spring Boot backend with JaCoCo coverage
-- **Client job**: Installs, tests, and builds the React frontend with Vitest coverage
-- **Docker job**: Builds GraalVM native image, pushes Docker image to `ghcr.io`, and creates GitHub Release
+- **Client job**: Installs, tests, and builds the React frontend, saving build artifacts.
+- **Server Test job**: Runs backend tests with GraalVM.
+- **Build & Push job**: Runs a matrix build for `amd64` and `arm64` that:
+  - Builds the GraalVM native executable for the specific architecture.
+  - Pushes architecture-specific Docker images.
+- **Manifest job**:
+  - Creates a multi-arch Docker manifest combining the images.
+  - Pushes the final version tag (and `latest` for stable releases).
+  - Creates the GitHub Release with auto-generated notes.
 
-The Docker image is published to GitHub Container Registry at `ghcr.io/<owner>/porthole`.
+The Docker image is published to GitHub Container Registry at `ghcr.io/room-elephant/porthole`.
 
 See `.github/workflows/release.yml` for the full workflow definition.
 
 ## Docker Production Setup
 
 ### Base Image Strategy
-We use **`debian:bookworm-slim`** for the runtime image instead of Alpine.
+Given a standard GraalVM native-image build (glibc-based, dynamically linked), **`debian:bookworm-slim`** is the correct runtime choice instead of Alpine.
 - **Reason**: The native binary built by GraalVM is dynamically linked against `glibc` (present in the build stage).
 - **Compatibility**: Alpine uses `musl`, which makes it incompatible with standard glibc-linked binaries without complex static linking configurations.
 - **Trade-off**: Bookworm-slim offers a stable, multi-arch foundation and is relatively small (~75MB), providing a good balance between size and compatibility.

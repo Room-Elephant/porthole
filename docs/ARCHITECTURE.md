@@ -74,11 +74,11 @@ This is required because the Docker Registry API expects the full path:
 
 ## API Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/containers` | GET | Returns all containers. Supports `includeWithoutPorts` and `includeStopped` query params |
-| `/api/containers/{containerId}/version` | GET | Returns version info for a container (current version, latest version, update availability) |
-| `/actuator/health` | GET | Health check with Docker connectivity status |
+| Endpoint                                | Method | Description                                                                                 |
+|-----------------------------------------|--------|---------------------------------------------------------------------------------------------|
+| `/api/containers`                       | GET    | Returns all containers. Supports `includeWithoutPorts` and `includeStopped` query params    |
+| `/api/containers/{containerId}/version` | GET    | Returns version info for a container (current version, latest version, update availability) |
+| `/actuator/health`                      | GET    | Health check with Docker connectivity status                                                |
 
 ## Health Check
 
@@ -101,6 +101,7 @@ When stopping Porthole, active requests are allowed up to 20 seconds to complete
 ├── client/             # React Application
 ├── server/             # Spring Boot Application
 │   └── src/main/java/com/roomelephant/porthole
-├── Dockerfile          # Multi-stage build definition
+├── docker/             # Production Docker configuration
+├── dev/                # Development Docker configuration
 └── docs/               # Documentation
 ```

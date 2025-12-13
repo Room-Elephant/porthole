@@ -1,7 +1,7 @@
 FROM debian:bookworm-slim
 
 LABEL org.opencontainers.image.title=Porthole
-LABEL org.opencontainers.image.description="A modern, lightweight dashboard for your local Docker containers."
+LABEL org.opencontainers.image.description="Centralized dashboard for running Docker containers with automatic port discovery."
 LABEL org.opencontainers.image.source=https://github.com/Room-Elephant/porthole
 LABEL org.opencontainers.image.licenses=MIT
 
