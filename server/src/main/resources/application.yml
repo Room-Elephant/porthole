@@ -9,6 +9,8 @@ server:
 spring:
   application:
     name: porthole
+    title: "@project.name@"
+    version: "@project.version@"
   threads:
     virtual:
       enabled: true

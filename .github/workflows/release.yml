@@ -98,6 +98,12 @@ jobs:
           distribution: 'graalvm-community'
           cache: maven
 
+      - name: Set project version
+        working-directory: server
+        run: |
+          clean_version="${GITHUB_REF_NAME#v}"
+          mvn versions:set -DnewVersion=${clean_version} -DgenerateBackupPoms=false
+
       - name: Build native image
         working-directory: server
         run: mvn -Pnative,copy-client package native:compile -DskipTests -B
