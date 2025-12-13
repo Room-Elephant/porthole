@@ -16,17 +16,24 @@ docker run -d -p 9753:9753 \
 
 The Docker image includes template configuration files in `/app/config/`:
 
-| File | Purpose |
-|------|---------|
-| `application.yml` | Main application settings (Docker host, registry timeouts, icon CDN) |
-| `icons.yml` | Custom icon mappings |
+| File              | Purpose                                                                 |
+|-------------------|-------------------------------------------------------------------------|
+| `application.yml` | Main application settings (Docker host, registry timeouts, icon CDN)    |
+| `icons.yml`       | Custom icon mappings                                                    |
 
-You can mount your own files to override these templates:
+You can mount your own files to override these templates. You can either mount the entire directory or individual files:
 
 ```bash
+# Mount the entire config directory
 docker run -d -p 9753:9753 \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  -v $(pwd)/my-config:/app/config \
+  -v $(pwd)/config:/app/config \
+  --name porthole porthole
+
+# OR mount individual files
+docker run -d -p 9753:9753 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v $(pwd)/my-icons.yml:/app/config/icons.yml \
   --name porthole porthole
 ```
 
@@ -34,12 +41,12 @@ docker run -d -p 9753:9753 \
 
 Porthole queries Docker Hub to check for updates. You can configure timeouts and cache settings:
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `REGISTRY_TIMEOUT_CONNECT` | `5s` | Connection timeout for Docker Hub API |
-| `REGISTRY_TIMEOUT_READ` | `10s` | Read timeout for Docker Hub API |
-| `REGISTRY_CACHE_TTL` | `1h` | How long to cache version information |
-| `REGISTRY_CACHE_VERSION_MAX_SIZE` | `100` | Maximum cached version entries |
+| Property                          | Default | Description                           |
+|-----------------------------------|---------|---------------------------------------|
+| `REGISTRY_TIMEOUT_CONNECT`        | `5s`    | Connection timeout for Docker Hub API |
+| `REGISTRY_TIMEOUT_READ`           | `10s`   | Read timeout for Docker Hub API       |
+| `REGISTRY_CACHE_TTL`              | `1h`    | How long to cache version information |
+| `REGISTRY_CACHE_VERSION_MAX_SIZE` | `100` | Maximum cached version entries   |
 
 ### Icon Mappings
 
@@ -49,10 +56,10 @@ Porthole uses a smart icon resolution strategy, but sometimes you need manual co
 
 By default, icons are fetched from Dashboard Icons CDN. You can customize the source:
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `DASHBOARD_ICONS_URL` | `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp` | Base URL for icons |
-| `DASHBOARD_ICONS_EXTENSION` | `.webp` | File extension |
+| Property                          | Default                                                         | Description                           |
+|-----------------------------------|-----------------------------------------------------------------|---------------------------------------|
+| `DASHBOARD_ICONS_URL`             | `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp`  | Base URL for icons                    |
+| `DASHBOARD_ICONS_EXTENSION`       | `.webp`                                                         | File extension                        |
 
 #### Icon Resolution Logic
 
@@ -75,26 +82,19 @@ custom-app: react
 The **Key** is the container image name (or simple name like `postgres`).
 The **Value** is the icon slug from [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons).
 
-2. Run with Volume Mount
+2. Mount the File
 
-The Docker image includes a template at `/app/config/icons.yml`. Mount your file to override it:
-
-```bash
-docker run -d -p 9753:9753 \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v $(pwd)/my-icons.yml:/app/config/icons.yml \
-  --name porthole porthole
-```
+Mount your file to `/app/config/icons.yml` as described in the [Configuration Files](#configuration-files) section.
 
 #### Default Mappings
 
 The application comes with these built-in defaults:
 
-| Image Name | Mapped Icon Slug |
-| :--- | :--- |
-| `mongo` | `mongodb` |
-| `postgres` | `postgresql` |
-| `cassandra` | `apache-cassandra` |
+| Image Name  | Mapped Icon Slug    |
+| :-----------| :------------------ |
+| `mongo`     | `mongodb`           |
+| `postgres`  | `postgresql`        |
+| `cassandra` | `apache-cassandra`  |
 
 Overriding these keys in your external file will take precedence.
 

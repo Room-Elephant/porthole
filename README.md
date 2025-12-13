@@ -6,15 +6,16 @@
 
 ![Porthole Screenshot](docs/images/screenshot.png)
 
-Porthole automatically discovers your running Docker containers and provides a beautiful, clean interface to access them. It resolves container icons automatically using [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons) and allows you to quickly jump to exposed ports.
+Porthole serves as the ultimate shortcut page for your self-hosted Docker environment, automatically detecting running applications and their exposed ports. It centralizes all your services into one beautiful dashboard, ensuring you never have to memorize a port number again.
+
+It resolves container icons automatically 
 
 ## Features
 
-- 🕵️‍♂️ **Auto-Discovery**: Automatically lists all running containers with exposed ports.
-- 🎨 **Automated Icons**: Maps container image names to icons (e.g., `redis` → Redis icon).
+- 🕵️‍♂️ **Auto-Discovery**: Automatically lists all containers.
+- 🎨 **Automated Icons**: Maps container image names to icons using [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons).
 - 🔄 **Update Detection**: Checks Docker Hub for newer image versions and digest changes.
 - 📦 **Compose Grouping**: Groups containers by Docker Compose project.
-- 🔌 **Port Selection**: Remembers your preferred port for containers exposing multiple ports.
 - ⚙️ **Per-Container Settings**: Configure port preference and update checking for each container.
 - 🚦 **Status Indicators**: Shows container health with color-coded semaphore (green/yellow/red).
 - 🐳 **Docker Native**: Runs as a single, lightweight Docker container.
@@ -29,7 +30,7 @@ docker run -d \
   -p 9753:9753 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   --name porthole \
-  ghcr.io/roomelephant/porthole:latest
+  docker pull ghcr.io/room-elephant/porthole:latest
 ```
 
 **Note**: Mounting `/var/run/docker.sock` is required for Porthole to see your other containers.
@@ -37,8 +38,6 @@ docker run -d \
 Open [http://localhost:9753](http://localhost:9753) to view your dashboard.
 
 ## Configuration
-
-**Docker Host**: By default, Porthole connects via `unix:///var/run/docker.sock`. Override with the `DOCKER_HOST` environment variable.
 
 **Custom Icons**: Create an `icons.yml` file to map container images to [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons) slugs:
 
@@ -54,7 +53,7 @@ docker run -d -p 9753:9753 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v $(pwd)/config:/app/config \
   --name porthole \
-  ghcr.io/roomelephant/porthole:latest
+  docker pull ghcr.io/room-elephant/porthole:latest
 ```
 
 See [Configuration Guide](docs/CONFIGURATION.md) for all options.
