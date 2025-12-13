@@ -1,4 +1,3 @@
-# Runtime Stage
 FROM debian:bookworm-slim
 
 LABEL org.opencontainers.image.title="Porthole"

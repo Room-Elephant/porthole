@@ -203,3 +203,28 @@ The Docker image is published to GitHub Container Registry at `ghcr.io/<owner>/p
 
 See `.github/workflows/release.yml` for the full workflow definition.
 
+## Docker Production Setup
+
+### Base Image Strategy
+We use **`debian:bookworm-slim`** for the runtime image instead of Alpine.
+- **Reason**: The native binary built by GraalVM is dynamically linked against `glibc` (present in the build stage).
+- **Compatibility**: Alpine uses `musl`, which makes it incompatible with standard glibc-linked binaries without complex static linking configurations.
+- **Trade-off**: Bookworm-slim offers a stable, multi-arch foundation and is relatively small (~75MB), providing a good balance between size and compatibility.
+
+### Permissions & Security
+To run securely as a non-root user while accessing the Docker socket:
+
+1. **Build Time**:
+   - Creates a `nonroot` user with UID/GID 65532.
+   - Adds this user to `root` (GID 0) and `daemon` (GID 1) groups, as these historically or commonly own `/var/run/docker.sock`.
+
+2. **Run Time (Entrypoint)**:
+   - The container starts as `root` (via `entrypoint.sh`) to perform setup.
+   - **Socket Detection**: Checks the GID of the mounted `/var/run/docker.sock`.
+   - **Dynamic Permissions**:
+     - If the socket is owned by a GID that doesn't exist (e.g., 998), it dynamically creates a group for it.
+     - Adds the `nonroot` user to this new group.
+   - **Privilege Drop**: Finally, uses `gosu` to switch to the `nonroot` user before executing the main application.
+
+This ensures the application process itself runs without root privileges but still has the exact access needed to talk to the host's Docker daemon.
+
