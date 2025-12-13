@@ -111,8 +111,10 @@ jobs:
         working-directory: server
         run: mvn -Pnative,copy-client package native:compile -DskipTests -B
 
-      - name: Move and Rename binary
-        run: cp server/target/porthole porthole-linux-${{ matrix.arch }}
+      - name: Preparing binaries
+        run: |
+          cp server/target/porthole porthole
+          cp server/target/porthole porthole-linux-${{ matrix.arch }}
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
