@@ -24,7 +24,8 @@ COPY --chown=nonroot:nonroot porthole porthole
 COPY --chown=nonroot:nonroot config/ /app/config/
 
 # Copy and setup entrypoint
-COPY --chmod=755 entrypoint.sh /app/entrypoint.sh
+COPY --chmod=755 docker/entrypoint.sh /app/entrypoint.sh
+
 
 # Expose the port
 EXPOSE 9753
