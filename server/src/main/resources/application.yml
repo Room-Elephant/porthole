@@ -9,7 +9,7 @@ server:
 spring:
   application:
     name: porthole
-    title: "@project.name@"
+    title: Porthole
     version: "@project.version@"
   threads:
     virtual:

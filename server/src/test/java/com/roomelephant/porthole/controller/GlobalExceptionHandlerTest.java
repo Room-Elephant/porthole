@@ -30,8 +30,7 @@ class GlobalExceptionHandlerTest {
         @DisplayName("should return ProblemDetail with correct status for NOT_FOUND")
         void shouldReturnProblemDetailWithCorrectStatusForNotFound() {
             ResponseStatusException exception = new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Container not found"
-            );
+                    HttpStatus.NOT_FOUND, "Container not found");
 
             ProblemDetail result = exceptionHandler.handleResponseStatusException(exception);
 
@@ -44,8 +43,7 @@ class GlobalExceptionHandlerTest {
         @DisplayName("should return ProblemDetail with correct status for BAD_GATEWAY")
         void shouldReturnProblemDetailWithCorrectStatusForBadGateway() {
             ResponseStatusException exception = new ResponseStatusException(
-                    HttpStatus.BAD_GATEWAY, "Docker is not reachable"
-            );
+                    HttpStatus.BAD_GATEWAY, "Docker is not reachable");
 
             ProblemDetail result = exceptionHandler.handleResponseStatusException(exception);
 
@@ -94,6 +92,25 @@ class GlobalExceptionHandlerTest {
     }
 
     @Nested
+    @DisplayName("handleNoResourceFound")
+    class HandleNoResourceFound {
+
+        @Test
+        @DisplayName("should return ProblemDetail with NOT_FOUND status")
+        void shouldReturnProblemDetailWithNotFoundStatus() {
+            org.springframework.web.servlet.resource.NoResourceFoundException exception = new org.springframework.web.servlet.resource.NoResourceFoundException(
+                    org.springframework.http.HttpMethod.GET, "/.well-known/appspecific", "resource");
+
+            ProblemDetail result = exceptionHandler.handleNoResourceFound(exception);
+
+            assertEquals(404, result.getStatus());
+            assertEquals("No static resource resource for request '/.well-known/appspecific'.", result.getDetail());
+            assertEquals("Not Found", result.getTitle());
+            assertEquals(URI.create("about:blank"), result.getType());
+        }
+    }
+
+    @Nested
     @DisplayName("handleGenericException")
     class HandleGenericException {
 
@@ -133,4 +150,3 @@ class GlobalExceptionHandlerTest {
         }
     }
 }
-
