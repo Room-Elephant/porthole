@@ -64,14 +64,29 @@ class VersionServiceTest {
         @DisplayName("should throw ResponseStatusException when container not found")
         void shouldThrowResponseStatusExceptionWhenContainerNotFound() {
             when(dockerClient.inspectContainerCmd("unknown")).thenReturn(inspectContainerCmd);
-            when(inspectContainerCmd.exec()).thenThrow(new RuntimeException("Not found"));
+            when(inspectContainerCmd.exec())
+                    .thenThrow(new com.github.dockerjava.api.exception.NotFoundException("Not found"));
 
             ResponseStatusException exception = assertThrows(
                     ResponseStatusException.class,
-                    () -> versionService.getVersionInfo("unknown")
-            );
+                    () -> versionService.getVersionInfo("unknown"));
 
+            assertEquals(404, exception.getStatusCode().value());
             assertTrue(exception.getReason().contains("Container not found"));
+        }
+
+        @Test
+        @DisplayName("should throw ResponseStatusException when docker fails")
+        void shouldThrowResponseStatusExceptionWhenDockerFails() {
+            when(dockerClient.inspectContainerCmd("container1")).thenReturn(inspectContainerCmd);
+            when(inspectContainerCmd.exec()).thenThrow(new RuntimeException("Docker error"));
+
+            ResponseStatusException exception = assertThrows(
+                    ResponseStatusException.class,
+                    () -> versionService.getVersionInfo("container1"));
+
+            assertEquals(500, exception.getStatusCode().value());
+            assertTrue(exception.getReason().contains("Failed to inspect container"));
         }
 
         @Test
@@ -157,7 +172,7 @@ class VersionServiceTest {
         void shouldReturnVersionFromEnvironmentVariable() {
             setupContainerWithImage("nginx:latest");
             setupRemoteImage();
-            when(containerConfig.getEnv()).thenReturn(new String[]{"NGINX_VERSION=1.25.0"});
+            when(containerConfig.getEnv()).thenReturn(new String[] { "NGINX_VERSION=1.25.0" });
             when(registryService.getLatestVersion("nginx:latest")).thenReturn("1.26.0");
             when(registryService.getDigest("nginx:latest", "latest")).thenReturn("sha256:remote");
 
@@ -171,7 +186,7 @@ class VersionServiceTest {
         void shouldReturnVersionFromGenericVersionEnvVar() {
             setupContainerWithImage("myapp:latest");
             setupRemoteImage();
-            when(containerConfig.getEnv()).thenReturn(new String[]{"VERSION=3.0.0"});
+            when(containerConfig.getEnv()).thenReturn(new String[] { "VERSION=3.0.0" });
             when(registryService.getLatestVersion("myapp:latest")).thenReturn("3.1.0");
             when(registryService.getDigest("myapp:latest", "latest")).thenReturn("sha256:remote");
 
@@ -279,7 +294,7 @@ class VersionServiceTest {
         void shouldSkipEmptyEnvVarValues() {
             setupContainerWithImage("nginx:latest");
             setupRemoteImage();
-            when(containerConfig.getEnv()).thenReturn(new String[]{"NGINX_VERSION=", "VERSION="});
+            when(containerConfig.getEnv()).thenReturn(new String[] { "NGINX_VERSION=", "VERSION=" });
             when(containerConfig.getLabels()).thenReturn(null);
             when(registryService.getLatestVersion("nginx:latest")).thenReturn("1.26.0");
             when(registryService.getDigest("nginx:latest", "latest")).thenReturn("sha256:remote");
@@ -339,7 +354,7 @@ class VersionServiceTest {
         void shouldSkipUnrelatedEnvVars() {
             setupContainerWithImage("nginx:latest");
             setupRemoteImage();
-            when(containerConfig.getEnv()).thenReturn(new String[]{"OTHER_VAR=value", "PATH=/bin"});
+            when(containerConfig.getEnv()).thenReturn(new String[] { "OTHER_VAR=value", "PATH=/bin" });
             when(containerConfig.getLabels()).thenReturn(null);
             when(registryService.getLatestVersion("nginx:latest")).thenReturn("1.26.0");
             when(registryService.getDigest("nginx:latest", "latest")).thenReturn("sha256:local");
