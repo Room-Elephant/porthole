@@ -4,18 +4,16 @@ on:
   push:
     tags:
       - 'v*'
-  pull_request:
-    branches:
-      - main
 
 env:
   REGISTRY: ghcr.io
-  DEFAULT_VERSION: v0.0.2-beta
 
 jobs:
   client:
     name: Build Client
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -49,6 +47,8 @@ jobs:
   server-test:
     name: Test Server
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -102,7 +102,6 @@ jobs:
         working-directory: server
         run: mvn -Pnative,copy-client package native:compile -DskipTests -B
 
-      # Move binary to root so Dockerfile can pick it up (COPY porthole porthole)
       - name: Move binary
         run: cp server/target/porthole .
 
@@ -120,24 +119,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Determine version
-        id: version
-        run: |
-          if [[ "${{ github.event_name }}" == "push" ]]; then
-            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-            echo "is_prerelease=false" >> $GITHUB_OUTPUT
-          else
-            echo "tag=${{ env.DEFAULT_VERSION }}" >> $GITHUB_OUTPUT
-            echo "is_prerelease=true" >> $GITHUB_OUTPUT
-          fi
-
       - name: Extract metadata for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}
           tags: |
-            type=raw,value=${{ steps.version.outputs.tag }}-${{ matrix.arch }}
+            type=raw,value=${{ github.ref_name }}-${{ matrix.arch }}
 
       - name: Build and push by digest
         id: build
@@ -169,37 +157,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Determine version
-        id: version
-        run: |
-          if [[ "${{ github.event_name }}" == "push" ]]; then
-            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-            echo "is_prerelease=false" >> $GITHUB_OUTPUT
-          else
-            echo "tag=${{ env.DEFAULT_VERSION }}" >> $GITHUB_OUTPUT
-            echo "is_prerelease=true" >> $GITHUB_OUTPUT
-          fi
-
       - name: Create and push manifest
         run: |
           # Create manifest for the version tag
-          docker buildx imagetools create -t ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ steps.version.outputs.tag }} \
-            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ steps.version.outputs.tag }}-amd64 \
-            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ steps.version.outputs.tag }}-arm64
+          docker buildx imagetools create -t ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ github.ref_name }} \
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ github.ref_name }}-amd64 \
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ github.ref_name }}-arm64
           
-          # Create manifest for latest tag if not prerelease
-          if [[ "${{ steps.version.outputs.is_prerelease }}" == "false" ]]; then
+          # Create manifest for latest tag if it looks like a stable release (no hyphen)
+          if [[ "${{ github.ref_name }}" != *"-"* ]]; then
             docker buildx imagetools create -t ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:latest \
-              ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ steps.version.outputs.tag }}-amd64 \
-              ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ steps.version.outputs.tag }}-arm64
+              ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ github.ref_name }}-amd64 \
+              ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ github.ref_name }}-arm64
           fi
 
       - name: Create GitHub Release
-        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: Release ${{ steps.version.outputs.tag }}
+          name: Release ${{ github.ref_name }}
           generate_release_notes: true
           draft: false
-          prerelease: ${{ steps.version.outputs.is_prerelease == 'true' }}
+          prerelease: ${{ contains(github.ref_name, '-') }}
