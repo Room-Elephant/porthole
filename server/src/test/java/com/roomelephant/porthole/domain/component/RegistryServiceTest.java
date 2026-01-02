@@ -1,4 +1,4 @@
-package com.roomelephant.porthole.component;
+package com.roomelephant.porthole.domain.component;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;

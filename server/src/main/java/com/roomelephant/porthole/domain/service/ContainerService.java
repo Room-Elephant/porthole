@@ -1,16 +1,16 @@
-package com.roomelephant.porthole.service;
+package com.roomelephant.porthole.domain.service;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.Container;
-import com.roomelephant.porthole.mapper.ContainerMapper;
-import com.roomelephant.porthole.model.ContainerDTO;
+import com.roomelephant.porthole.domain.mapper.ContainerMapper;
+import com.roomelephant.porthole.domain.model.ContainerDTO;
+import com.roomelephant.porthole.domain.model.exception.DockerUnavailableException;
+import com.roomelephant.porthole.domain.model.exception.UnexpectedException;
 import java.net.SocketException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
 @Service
@@ -31,10 +31,9 @@ public class ContainerService {
                     dockerClient.listContainersCmd().withShowAll(includeStopped).exec();
         } catch (RuntimeException e) {
             if (isDockerConnectionError(e)) {
-                log.warn("Docker connection failed", e);
-                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Docker is not reachable", e);
+                throw new DockerUnavailableException(e);
             }
-            throw e;
+            throw new UnexpectedException(e);
         }
 
         return containers.stream()

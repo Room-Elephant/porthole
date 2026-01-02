@@ -18,13 +18,15 @@ import org.springframework.core.io.ClassPathResource;
 @Slf4j
 public class IconConfig {
 
-    @Bean
+  public static final String FILE_NAME = "icons.yml";
+
+  @Bean
     public Map<String, String> iconMappings(DashboardProperties dashboardProperties) {
         Map<String, String> mappings = new HashMap<>();
         YAMLMapper yamlMapper = new YAMLMapper();
 
         try {
-            ClassPathResource resource = new ClassPathResource("icons.yml");
+            ClassPathResource resource = new ClassPathResource(FILE_NAME);
             if (resource.exists()) {
                 try (InputStream inputStream = resource.getInputStream()) {
                     Map<String, String> defaults = yamlMapper.readValue(inputStream, new TypeReference<>() {});
@@ -44,9 +46,7 @@ public class IconConfig {
                 if (external != null) {
                     mappings.putAll(external);
                 }
-                log.debug(
-                        "Loaded external icon config from {}",
-                        dashboardProperties.icons().path());
+                log.debug("Loaded external icon config from {}", dashboardProperties.icons().path());
             } catch (IOException e) {
                 log.error("Failed to load external icon config: {}", e.getMessage());
             }

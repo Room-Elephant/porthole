@@ -2,6 +2,9 @@ package com.roomelephant.porthole.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.roomelephant.porthole.domain.model.exception.DockerUnavailableException;
+import com.roomelephant.porthole.domain.model.exception.NotFoundException;
+import com.roomelephant.porthole.domain.model.exception.UnexpectedException;
 import java.net.URI;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,6 +22,61 @@ class GlobalExceptionHandlerTest {
     @BeforeEach
     void setUp() {
         exceptionHandler = new GlobalExceptionHandler();
+    }
+
+    @Nested
+    @DisplayName("handleDockerUnavailable")
+    class HandleDockerUnavailable {
+
+        @Test
+        @DisplayName("should return ProblemDetail with BAD_GATEWAY status")
+        void shouldReturnProblemDetailWithBadGatewayStatus() {
+            DockerUnavailableException exception =
+                    new DockerUnavailableException(new RuntimeException("Connection refused"));
+
+            ProblemDetail result = exceptionHandler.handleDockerUnavailable(exception);
+
+            assertEquals(502, result.getStatus());
+            assertEquals("Docker is not reachable", result.getDetail());
+            assertEquals("Bad Gateway", result.getTitle());
+            assertEquals(URI.create("about:blank"), result.getType());
+        }
+    }
+
+    @Nested
+    @DisplayName("handleNotFound")
+    class HandleNotFound {
+
+        @Test
+        @DisplayName("should return ProblemDetail with NOT_FOUND status")
+        void shouldReturnProblemDetailWithNotFoundStatus() {
+            NotFoundException exception = new NotFoundException("container123");
+
+            ProblemDetail result = exceptionHandler.handleNotFound(exception);
+
+            assertEquals(404, result.getStatus());
+            assertEquals("Container not found: container123", result.getDetail());
+            assertEquals("Not Found", result.getTitle());
+            assertEquals(URI.create("about:blank"), result.getType());
+        }
+    }
+
+    @Nested
+    @DisplayName("handleUnexpected")
+    class HandleUnexpected {
+
+        @Test
+        @DisplayName("should return ProblemDetail with INTERNAL_SERVER_ERROR status")
+        void shouldReturnProblemDetailWithInternalServerErrorStatus() {
+            UnexpectedException exception = new UnexpectedException(new RuntimeException("Docker error"));
+
+            ProblemDetail result = exceptionHandler.handleUnexpected(exception);
+
+            assertEquals(500, result.getStatus());
+            assertEquals("Failed to inspect container", result.getDetail());
+            assertEquals("Internal Server Error", result.getTitle());
+            assertEquals(URI.create("about:blank"), result.getType());
+        }
     }
 
     @Nested

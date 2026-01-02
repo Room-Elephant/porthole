@@ -1,10 +1,14 @@
 package com.roomelephant.porthole.config;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.PingCmd;
+import java.net.SocketException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,12 +49,29 @@ class DockerHealthIndicatorTest {
     @DisplayName("should return DOWN status with error details when Docker is not reachable")
     void shouldReturnDownStatusWithErrorDetailsWhenDockerIsNotReachable() {
         when(dockerClient.pingCmd()).thenReturn(pingCmd);
+        doThrow(new RuntimeException(new SocketException("Connection refused")))
+                .when(pingCmd)
+                .exec();
+
+        Health health = healthIndicator.health();
+
+        assertEquals("DOWN", health.getStatus().toString());
+        assertEquals(
+                "Error connecting to docker",
+                health.getDetails().keySet().stream().findFirst().get());
+        assertEquals("Connection refused", health.getDetails().get("Error connecting to docker"));
+    }
+
+    @Test
+    @DisplayName("should return DOWN status with error details when Unexpected Error")
+    void shouldReturnDownStatusWithErrorDetailsWhenUnexpectedError() {
+        when(dockerClient.pingCmd()).thenReturn(pingCmd);
         doThrow(new RuntimeException("Connection refused")).when(pingCmd).exec();
 
         Health health = healthIndicator.health();
 
         assertEquals("DOWN", health.getStatus().toString());
-        assertTrue(health.getDetails().containsKey("error"));
-        assertEquals("Connection refused", health.getDetails().get("error"));
+        assertTrue(health.getDetails().containsKey("Unexpected exception"));
+        assertEquals("Connection refused", health.getDetails().get("Unexpected exception"));
     }
 }

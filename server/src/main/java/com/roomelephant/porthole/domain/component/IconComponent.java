@@ -1,4 +1,4 @@
-package com.roomelephant.porthole.component;
+package com.roomelephant.porthole.domain.component;
 
 import com.roomelephant.porthole.config.properties.DashboardProperties;
 import java.util.Map;
@@ -19,15 +19,12 @@ public class IconComponent {
     }
 
     public @NonNull String resolveIcon(@NonNull String imageName) {
-        if (imageName.isBlank()) {
-            return buildDashboardIconsUrl(DEFAULT_ICON);
-        }
-
-        if (iconMappings.containsKey(imageName)) {
-            return buildDashboardIconsUrl(iconMappings.get(imageName));
-        }
-
-        String iconName = sanitizeIconName(imageName);
+        String iconName =
+                switch (imageName) {
+                    case String s when s.isBlank() -> DEFAULT_ICON;
+                    case String s when iconMappings.containsKey(s) -> iconMappings.get(s);
+                    default -> sanitizeIconName(imageName);
+                };
         return buildDashboardIconsUrl(iconName);
     }
 

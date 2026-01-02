@@ -1,11 +1,11 @@
-package com.roomelephant.porthole.component;
+package com.roomelephant.porthole.domain.component;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.roomelephant.porthole.config.properties.RegistryProperties;
-import com.roomelephant.porthole.util.ImageUtils;
+import com.roomelephant.porthole.domain.util.ImageUtils;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +76,6 @@ public class RegistryService {
     }
 
     private @Nullable String fetchDigest(String tag, String repository, String token) {
-        // e.g. https://registry-1.docker.io/v2/ + repo + /manifests/ + tag
         String url = registryProperties.urls().registry() + repository + "/manifests/" + tag;
 
         var response = restClient
@@ -95,9 +94,6 @@ public class RegistryService {
     }
 
     private Optional<String> fetchAuthToken(String repository) {
-        // e.g.
-        // https://auth.docker.io/token?service=registry.docker.io&scope=repository: +
-        // repo + :pull
         String url = registryProperties.urls().auth() + repository + ":pull";
         try {
             String responseBody = restClient.get().uri(url).retrieve().body(String.class);
@@ -114,7 +110,6 @@ public class RegistryService {
     }
 
     private @Nullable String fetchLatestFromHub(String repository) {
-        // e.g. https://hub.docker.com/v2/repositories/ + repo + /tags?page_size=100
         String url = registryProperties.urls().repositories() + repository + "/tags?page_size=100";
         try {
             String responseBody = restClient.get().uri(url).retrieve().body(String.class);

@@ -1,9 +1,9 @@
 package com.roomelephant.porthole.controller;
 
-import com.roomelephant.porthole.model.ContainerDTO;
-import com.roomelephant.porthole.model.VersionDTO;
-import com.roomelephant.porthole.service.ContainerService;
-import com.roomelephant.porthole.service.VersionService;
+import com.roomelephant.porthole.domain.model.ContainerDTO;
+import com.roomelephant.porthole.domain.model.VersionDTO;
+import com.roomelephant.porthole.domain.service.ContainerService;
+import com.roomelephant.porthole.domain.service.VersionService;
 import java.util.List;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;

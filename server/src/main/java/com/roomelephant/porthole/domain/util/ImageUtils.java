@@ -1,10 +1,12 @@
-package com.roomelephant.porthole.util;
+package com.roomelephant.porthole.domain.util;
 
 import java.util.regex.Pattern;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 public final class ImageUtils {
 
+    public static final String UNKNOWN_IMAGE_NAME = "Unknown";
     public static final Pattern SEMVER_PATTERN = Pattern.compile("^v?\\d++(\\.\\d++)++$");
     private static final String LIBRARY = "library/";
     private static final String LATEST = "latest";
@@ -24,18 +26,16 @@ public final class ImageUtils {
      * Extracts the image name without registry prefix or tag.
      * Example: "my-reg/nginx:latest" → "nginx", "postgres:15" → "postgres"
      */
-    public static @NonNull String extractName(String image) {
+    public static @NonNull String extractName(@Nullable String image) {
         if (image == null) {
-            return "unknown";
+            return UNKNOWN_IMAGE_NAME;
         }
-        String name = image;
-        if (name.contains("/")) {
-            name = name.substring(name.lastIndexOf("/") + 1);
-        }
-        if (name.contains(":")) {
-            name = name.substring(0, name.indexOf(":"));
-        }
-        return name;
+
+        return switch (image) {
+            case String s when s.contains("/") -> s.substring(s.lastIndexOf("/") + 1);
+            case String s when s.contains(":") -> s.substring(0, s.indexOf(":"));
+            default -> image;
+        };
     }
 
     /**

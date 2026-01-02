@@ -1,4 +1,4 @@
-package com.roomelephant.porthole.model;
+package com.roomelephant.porthole.domain.model;
 
 import static org.junit.jupiter.api.Assertions.*;
 

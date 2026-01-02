@@ -1,4 +1,4 @@
-package com.roomelephant.porthole.mapper;
+package com.roomelephant.porthole.domain.mapper;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -7,8 +7,8 @@ import static org.mockito.Mockito.when;
 
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.ContainerPort;
-import com.roomelephant.porthole.component.IconComponent;
-import com.roomelephant.porthole.model.ContainerDTO;
+import com.roomelephant.porthole.domain.component.IconComponent;
+import com.roomelephant.porthole.domain.model.ContainerDTO;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

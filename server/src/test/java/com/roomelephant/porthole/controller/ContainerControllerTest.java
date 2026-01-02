@@ -4,10 +4,10 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import com.roomelephant.porthole.model.ContainerDTO;
-import com.roomelephant.porthole.model.VersionDTO;
-import com.roomelephant.porthole.service.ContainerService;
-import com.roomelephant.porthole.service.VersionService;
+import com.roomelephant.porthole.domain.model.ContainerDTO;
+import com.roomelephant.porthole.domain.model.VersionDTO;
+import com.roomelephant.porthole.domain.service.ContainerService;
+import com.roomelephant.porthole.domain.service.VersionService;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
