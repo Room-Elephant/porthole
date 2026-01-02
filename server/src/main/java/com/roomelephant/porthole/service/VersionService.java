@@ -35,7 +35,7 @@ public class VersionService {
         InspectContainerResponse container;
         try {
             container = dockerClient.inspectContainerCmd(containerId).exec();
-        } catch (NotFoundException e) {
+        } catch (NotFoundException _) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Container not found: " + containerId);
         } catch (Exception e) {
             log.error("Failed to inspect container {}", containerId, e);
