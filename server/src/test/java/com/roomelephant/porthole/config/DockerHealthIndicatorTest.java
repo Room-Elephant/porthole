@@ -1,5 +1,8 @@
 package com.roomelephant.porthole.config;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.PingCmd;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,9 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.health.contributor.Health;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("DockerHealthIndicator")
@@ -54,4 +54,3 @@ class DockerHealthIndicatorTest {
         assertEquals("Connection refused", health.getDetails().get("error"));
     }
 }
-

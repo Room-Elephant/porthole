@@ -43,10 +43,8 @@ public class RegistryService {
                 .expireAfterWrite(registryProperties.cache().ttl())
                 .maximumSize(registryProperties.cache().versionMaxSize())
                 .build();
-        this.tokenCache = Caffeine.newBuilder()
-                .expireAfterWrite(TOKEN_TTL)
-                .maximumSize(1)
-                .build();
+        this.tokenCache =
+                Caffeine.newBuilder().expireAfterWrite(TOKEN_TTL).maximumSize(1).build();
     }
 
     public @Nullable String getDigest(@NonNull String imageName, String tag) {
@@ -54,8 +52,7 @@ public class RegistryService {
             String repository = ImageUtils.resolveRepository(imageName);
             String token = getAuthToken(repository);
 
-            if (token == null)
-                return null;
+            if (token == null) return null;
 
             return fetchDigest(tag, repository, token);
         } catch (Exception e) {
@@ -82,7 +79,8 @@ public class RegistryService {
         // e.g. https://registry-1.docker.io/v2/ + repo + /manifests/ + tag
         String url = registryProperties.urls().registry() + repository + "/manifests/" + tag;
 
-        var response = restClient.head()
+        var response = restClient
+                .head()
                 .uri(url)
                 .header(HttpHeaders.AUTHORIZATION, BEARER + token)
                 .header(HttpHeaders.ACCEPT, ACCEPT_HEADER)
@@ -102,10 +100,7 @@ public class RegistryService {
         // repo + :pull
         String url = registryProperties.urls().auth() + repository + ":pull";
         try {
-            String responseBody = restClient.get()
-                    .uri(url)
-                    .retrieve()
-                    .body(String.class);
+            String responseBody = restClient.get().uri(url).retrieve().body(String.class);
             if (responseBody == null) {
                 return Optional.empty();
             }
@@ -122,13 +117,9 @@ public class RegistryService {
         // e.g. https://hub.docker.com/v2/repositories/ + repo + /tags?page_size=100
         String url = registryProperties.urls().repositories() + repository + "/tags?page_size=100";
         try {
-            String responseBody = restClient.get()
-                    .uri(url)
-                    .retrieve()
-                    .body(String.class);
+            String responseBody = restClient.get().uri(url).retrieve().body(String.class);
 
-            if (responseBody == null)
-                return null;
+            if (responseBody == null) return null;
             JsonNode response = objectMapper.readTree(responseBody);
             if (!response.has(RESULTS)) {
                 return null;

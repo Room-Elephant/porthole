@@ -36,7 +36,7 @@ public class IconComponent {
     }
 
     private @NonNull String buildDashboardIconsUrl(String iconName) {
-        return dashboardProperties.icons().url() + "/" + iconName + dashboardProperties.icons().extension();
+        return dashboardProperties.icons().url() + "/" + iconName
+                + dashboardProperties.icons().extension();
     }
 }
-

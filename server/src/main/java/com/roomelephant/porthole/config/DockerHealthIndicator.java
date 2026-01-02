@@ -20,10 +20,7 @@ public class DockerHealthIndicator implements HealthIndicator {
             dockerClient.pingCmd().exec();
             return Health.up().build();
         } catch (Exception e) {
-            return Health.down()
-                    .withDetail("error", e.getMessage())
-                    .build();
+            return Health.down().withDetail("error", e.getMessage()).build();
         }
     }
 }
-

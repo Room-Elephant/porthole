@@ -39,8 +39,8 @@ public class VersionService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Container not found: " + containerId);
         } catch (Exception e) {
             log.error("Failed to inspect container {}", containerId, e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Failed to inspect container: " + containerId);
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to inspect container: " + containerId);
         }
 
         var config = container.getConfig();
@@ -128,8 +128,11 @@ public class VersionService {
         return null;
     }
 
-    private boolean checkForUpdate(@NonNull String imageFull, @Nullable String currentVersion,
-            @Nullable String latestVersion, @NonNull List<String> repoDigests) {
+    private boolean checkForUpdate(
+            @NonNull String imageFull,
+            @Nullable String currentVersion,
+            @Nullable String latestVersion,
+            @NonNull List<String> repoDigests) {
         String tag = ImageUtils.extractTag(imageFull);
 
         try {

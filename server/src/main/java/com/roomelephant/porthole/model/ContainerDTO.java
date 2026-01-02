@@ -12,8 +12,7 @@ public record ContainerDTO(
         String iconUrl,
         String project,
         String state,
-        String status
-) {
+        String status) {
     @JsonProperty("hasPublicPorts")
     public boolean hasPublicPorts() {
         return exposedPorts != null && !exposedPorts.isEmpty();

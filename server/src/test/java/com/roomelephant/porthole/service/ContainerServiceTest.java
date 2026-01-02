@@ -1,10 +1,17 @@
 package com.roomelephant.porthole.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.ListContainersCmd;
 import com.github.dockerjava.api.model.Container;
 import com.roomelephant.porthole.mapper.ContainerMapper;
 import com.roomelephant.porthole.model.ContainerDTO;
+import java.net.SocketException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -13,14 +20,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.net.SocketException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ContainerService")
@@ -103,16 +102,15 @@ class ContainerServiceTest {
         @Test
         @DisplayName("should throw ResponseStatusException when Docker is not reachable")
         void shouldThrowResponseStatusExceptionWhenDockerIsNotReachable() {
-            RuntimeException dockerException = new RuntimeException("Connection failed",
-                    new SocketException("Connection refused"));
+            RuntimeException dockerException =
+                    new RuntimeException("Connection failed", new SocketException("Connection refused"));
 
             when(dockerClient.listContainersCmd()).thenReturn(listContainersCmd);
             when(listContainersCmd.withShowAll(anyBoolean())).thenReturn(listContainersCmd);
             when(listContainersCmd.exec()).thenThrow(dockerException);
 
-            ResponseStatusException exception = assertThrows(
-                    ResponseStatusException.class,
-                    () -> containerService.getContainers(true, false));
+            ResponseStatusException exception =
+                    assertThrows(ResponseStatusException.class, () -> containerService.getContainers(true, false));
 
             assertEquals("Docker is not reachable", exception.getReason());
         }
@@ -126,9 +124,8 @@ class ContainerServiceTest {
             when(listContainersCmd.withShowAll(anyBoolean())).thenReturn(listContainersCmd);
             when(listContainersCmd.exec()).thenThrow(otherException);
 
-            RuntimeException thrown = assertThrows(
-                    RuntimeException.class,
-                    () -> containerService.getContainers(true, false));
+            RuntimeException thrown =
+                    assertThrows(RuntimeException.class, () -> containerService.getContainers(true, false));
             assertEquals("Some other error", thrown.getMessage());
         }
 

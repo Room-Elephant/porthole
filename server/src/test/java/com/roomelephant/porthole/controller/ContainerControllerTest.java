@@ -1,9 +1,16 @@
 package com.roomelephant.porthole.controller;
 
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.roomelephant.porthole.model.ContainerDTO;
 import com.roomelephant.porthole.model.VersionDTO;
 import com.roomelephant.porthole.service.ContainerService;
 import com.roomelephant.porthole.service.VersionService;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -11,14 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ContainerController.class)
 @DisplayName("ContainerController")
@@ -63,8 +62,7 @@ class ContainerControllerTest {
 
             when(containerService.getContainers(true, false)).thenReturn(List.of(dtoWithPort, dtoNoPort));
 
-            mockMvc.perform(get("/api/containers")
-                    .param("includeWithoutPorts", "true"))
+            mockMvc.perform(get("/api/containers").param("includeWithoutPorts", "true"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(2));
 
@@ -76,8 +74,7 @@ class ContainerControllerTest {
         void shouldPassIncludeStoppedParameter() throws Exception {
             when(containerService.getContainers(false, true)).thenReturn(Collections.emptyList());
 
-            mockMvc.perform(get("/api/containers")
-                    .param("includeStopped", "true"))
+            mockMvc.perform(get("/api/containers").param("includeStopped", "true"))
                     .andExpect(status().isOk());
 
             verify(containerService).getContainers(false, true);
@@ -89,8 +86,8 @@ class ContainerControllerTest {
             when(containerService.getContainers(true, true)).thenReturn(Collections.emptyList());
 
             mockMvc.perform(get("/api/containers")
-                    .param("includeWithoutPorts", "true")
-                    .param("includeStopped", "true"))
+                            .param("includeWithoutPorts", "true")
+                            .param("includeStopped", "true"))
                     .andExpect(status().isOk());
 
             verify(containerService).getContainers(true, true);

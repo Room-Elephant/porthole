@@ -1,12 +1,11 @@
 package com.roomelephant.porthole.model;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Collections;
 import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("ContainerDTO")
 class ContainerDTOTest {
@@ -23,8 +22,7 @@ class ContainerDTOTest {
                 "https://example.com/nginx.png",
                 "my-project",
                 "running",
-                "Up 2 hours"
-        );
+                "Up 2 hours");
 
         assertTrue(dto.hasPublicPorts());
     }
@@ -41,8 +39,7 @@ class ContainerDTOTest {
                 "https://example.com/nginx.png",
                 "my-project",
                 "running",
-                "Up 2 hours"
-        );
+                "Up 2 hours");
 
         assertFalse(dto.hasPublicPorts());
     }
@@ -59,8 +56,7 @@ class ContainerDTOTest {
                 "https://example.com/nginx.png",
                 "my-project",
                 "running",
-                "Up 2 hours"
-        );
+                "Up 2 hours");
 
         assertFalse(dto.hasPublicPorts());
     }
@@ -77,8 +73,7 @@ class ContainerDTOTest {
                 "https://example.com/redis.png",
                 "test-project",
                 "running",
-                "Up 1 hour"
-        );
+                "Up 1 hour");
 
         assertEquals("abc123", dto.id());
         assertEquals("test-container", dto.name());
@@ -91,4 +86,3 @@ class ContainerDTOTest {
         assertEquals("Up 1 hour", dto.status());
     }
 }
-

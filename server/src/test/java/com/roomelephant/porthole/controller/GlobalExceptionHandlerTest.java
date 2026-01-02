@@ -1,5 +1,8 @@
 package com.roomelephant.porthole.controller;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.net.URI;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -7,10 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.net.URI;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("GlobalExceptionHandler")
 class GlobalExceptionHandlerTest {
@@ -29,8 +28,8 @@ class GlobalExceptionHandlerTest {
         @Test
         @DisplayName("should return ProblemDetail with correct status for NOT_FOUND")
         void shouldReturnProblemDetailWithCorrectStatusForNotFound() {
-            ResponseStatusException exception = new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Container not found");
+            ResponseStatusException exception =
+                    new ResponseStatusException(HttpStatus.NOT_FOUND, "Container not found");
 
             ProblemDetail result = exceptionHandler.handleResponseStatusException(exception);
 
@@ -42,8 +41,8 @@ class GlobalExceptionHandlerTest {
         @Test
         @DisplayName("should return ProblemDetail with correct status for BAD_GATEWAY")
         void shouldReturnProblemDetailWithCorrectStatusForBadGateway() {
-            ResponseStatusException exception = new ResponseStatusException(
-                    HttpStatus.BAD_GATEWAY, "Docker is not reachable");
+            ResponseStatusException exception =
+                    new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Docker is not reachable");
 
             ProblemDetail result = exceptionHandler.handleResponseStatusException(exception);
 
@@ -98,8 +97,9 @@ class GlobalExceptionHandlerTest {
         @Test
         @DisplayName("should return ProblemDetail with NOT_FOUND status")
         void shouldReturnProblemDetailWithNotFoundStatus() {
-            org.springframework.web.servlet.resource.NoResourceFoundException exception = new org.springframework.web.servlet.resource.NoResourceFoundException(
-                    org.springframework.http.HttpMethod.GET, "/.well-known/appspecific", "resource");
+            org.springframework.web.servlet.resource.NoResourceFoundException exception =
+                    new org.springframework.web.servlet.resource.NoResourceFoundException(
+                            org.springframework.http.HttpMethod.GET, "/.well-known/appspecific", "resource");
 
             ProblemDetail result = exceptionHandler.handleNoResourceFound(exception);
 

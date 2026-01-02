@@ -1,9 +1,15 @@
 package com.roomelephant.porthole.mapper;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.ContainerPort;
 import com.roomelephant.porthole.component.IconComponent;
 import com.roomelephant.porthole.model.ContainerDTO;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -11,13 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ContainerMapper")
@@ -44,11 +43,10 @@ class ContainerMapperTest {
                     "abc123",
                     "/my-container",
                     "nginx:1.25",
-                    new Integer[]{80, 443},
+                    new Integer[] {80, 443},
                     Map.of("com.docker.compose.project", "my-project"),
                     "running",
-                    "Up 2 hours"
-            );
+                    "Up 2 hours");
             when(iconComponent.resolveIcon("nginx")).thenReturn("https://example.com/nginx.png");
 
             ContainerDTO dto = containerMapper.toDTO(container);
@@ -69,14 +67,7 @@ class ContainerMapperTest {
         @DisplayName("should handle container with no public ports")
         void shouldHandleContainerWithNoPublicPorts() {
             Container container = createMockContainer(
-                    "abc123",
-                    "/my-container",
-                    "redis:7",
-                    new Integer[]{},
-                    null,
-                    "running",
-                    "Up 1 hour"
-            );
+                    "abc123", "/my-container", "redis:7", new Integer[] {}, null, "running", "Up 1 hour");
             when(iconComponent.resolveIcon("redis")).thenReturn("https://example.com/redis.png");
 
             ContainerDTO dto = containerMapper.toDTO(container);
@@ -90,7 +81,7 @@ class ContainerMapperTest {
         void shouldFilterNullPorts() {
             Container container = mock(Container.class);
             when(container.getId()).thenReturn("abc123");
-            when(container.getNames()).thenReturn(new String[]{"/my-container"});
+            when(container.getNames()).thenReturn(new String[] {"/my-container"});
             when(container.getImage()).thenReturn("nginx:latest");
             when(container.getLabels()).thenReturn(null);
             when(container.getState()).thenReturn("running");
@@ -100,7 +91,7 @@ class ContainerMapperTest {
             when(port1.getPublicPort()).thenReturn(80);
             ContainerPort port2 = mock(ContainerPort.class);
             when(port2.getPublicPort()).thenReturn(null);
-            when(container.getPorts()).thenReturn(new ContainerPort[]{port1, port2});
+            when(container.getPorts()).thenReturn(new ContainerPort[] {port1, port2});
 
             when(iconComponent.resolveIcon(anyString())).thenReturn("https://example.com/icon.png");
 
@@ -117,11 +108,10 @@ class ContainerMapperTest {
                     "abc123",
                     "/my-container",
                     "nginx:latest",
-                    new Integer[]{80, 80, 443, 443},
+                    new Integer[] {80, 80, 443, 443},
                     null,
                     "running",
-                    "Up 1 hour"
-            );
+                    "Up 1 hour");
             when(iconComponent.resolveIcon(anyString())).thenReturn("https://example.com/icon.png");
 
             ContainerDTO dto = containerMapper.toDTO(container);
@@ -136,11 +126,10 @@ class ContainerMapperTest {
                     "abc123",
                     "/my-project-web",
                     "nginx:latest",
-                    new Integer[]{80},
+                    new Integer[] {80},
                     Map.of("com.docker.compose.project", "my-project"),
                     "running",
-                    "Up 1 hour"
-            );
+                    "Up 1 hour");
             when(iconComponent.resolveIcon(anyString())).thenReturn("https://example.com/icon.png");
 
             ContainerDTO dto = containerMapper.toDTO(container);
@@ -156,11 +145,10 @@ class ContainerMapperTest {
                     "abc123",
                     "/other-web",
                     "nginx:latest",
-                    new Integer[]{80},
+                    new Integer[] {80},
                     Map.of("com.docker.compose.project", "my-project"),
                     "running",
-                    "Up 1 hour"
-            );
+                    "Up 1 hour");
             when(iconComponent.resolveIcon(anyString())).thenReturn("https://example.com/icon.png");
 
             ContainerDTO dto = containerMapper.toDTO(container);
@@ -173,14 +161,7 @@ class ContainerMapperTest {
         @DisplayName("should use name as display name when no project")
         void shouldUseNameAsDisplayNameWhenNoProject() {
             Container container = createMockContainer(
-                    "abc123",
-                    "/standalone-app",
-                    "myapp:latest",
-                    new Integer[]{8080},
-                    null,
-                    "running",
-                    "Up 1 hour"
-            );
+                    "abc123", "/standalone-app", "myapp:latest", new Integer[] {8080}, null, "running", "Up 1 hour");
             when(iconComponent.resolveIcon(anyString())).thenReturn("https://example.com/icon.png");
 
             ContainerDTO dto = containerMapper.toDTO(container);
@@ -194,12 +175,12 @@ class ContainerMapperTest {
         void shouldHandleEmptyNamesArray() {
             Container container = mock(Container.class);
             when(container.getId()).thenReturn("abc123");
-            when(container.getNames()).thenReturn(new String[]{});
+            when(container.getNames()).thenReturn(new String[] {});
             when(container.getImage()).thenReturn("nginx:latest");
             when(container.getLabels()).thenReturn(null);
             when(container.getState()).thenReturn("running");
             when(container.getStatus()).thenReturn("Up 1 hour");
-            when(container.getPorts()).thenReturn(new ContainerPort[]{});
+            when(container.getPorts()).thenReturn(new ContainerPort[] {});
             when(iconComponent.resolveIcon(anyString())).thenReturn("https://example.com/icon.png");
 
             ContainerDTO dto = containerMapper.toDTO(container);
@@ -214,11 +195,10 @@ class ContainerMapperTest {
                     "abc123",
                     "/my-container",
                     "bitnami/postgresql:15",
-                    new Integer[]{5432},
+                    new Integer[] {5432},
                     null,
                     "running",
-                    "Up 1 hour"
-            );
+                    "Up 1 hour");
             when(iconComponent.resolveIcon("postgresql")).thenReturn("https://example.com/postgresql.png");
 
             ContainerDTO dto = containerMapper.toDTO(container);
@@ -227,11 +207,17 @@ class ContainerMapperTest {
         }
     }
 
-    private Container createMockContainer(String id, String name, String image, Integer[] ports,
-                                          Map<String, String> labels, String state, String status) {
+    private Container createMockContainer(
+            String id,
+            String name,
+            String image,
+            Integer[] ports,
+            Map<String, String> labels,
+            String state,
+            String status) {
         Container container = mock(Container.class);
         when(container.getId()).thenReturn(id);
-        when(container.getNames()).thenReturn(new String[]{name});
+        when(container.getNames()).thenReturn(new String[] {name});
         when(container.getImage()).thenReturn(image);
         when(container.getLabels()).thenReturn(labels);
         when(container.getState()).thenReturn(state);
@@ -248,4 +234,3 @@ class ContainerMapperTest {
         return container;
     }
 }
-

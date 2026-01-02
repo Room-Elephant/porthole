@@ -9,8 +9,7 @@ public final class ImageUtils {
     private static final String LIBRARY = "library/";
     private static final String LATEST = "latest";
 
-    private ImageUtils() {
-    }
+    private ImageUtils() {}
 
     /**
      * Extracts the tag from a Docker image reference.

@@ -44,7 +44,9 @@ public class IconConfig {
                 if (external != null) {
                     mappings.putAll(external);
                 }
-                log.debug("Loaded external icon config from {}", dashboardProperties.icons().path());
+                log.debug(
+                        "Loaded external icon config from {}",
+                        dashboardProperties.icons().path());
             } catch (IOException e) {
                 log.error("Failed to load external icon config: {}", e.getMessage());
             }
@@ -54,4 +56,3 @@ public class IconConfig {
         return Collections.unmodifiableMap(mappings);
     }
 }
-

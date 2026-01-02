@@ -23,6 +23,7 @@
         <npm.version>11.6.2</npm.version>
         <jspecify.version>1.0.0</jspecify.version>
         <jacoco.version>0.8.14</jacoco.version>
+        <spotless.version>3.1.0</spotless.version>
     </properties>
     
     <dependencies>
@@ -207,6 +208,32 @@
                                 </rule>
                             </rules>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Spotless plugin for code formatting (runs by default) -->
+            <!-- Skip with: mvn install -Dspotless.skip -->
+            <!-- Note: Spotless naturally respects spotless.skip property -->
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>${spotless.version}</version>
+                <configuration>
+                    <java>
+                        <!-- Use Palantir Java Format (Google-style based) -->
+                        <palantirJavaFormat />
+                        <!-- Include all Java files -->
+
+                        <!-- Remove unused imports -->
+                        <removeUnusedImports />
+                    </java>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>validate</phase>
                     </execution>
                 </executions>
             </plugin>

@@ -46,15 +46,7 @@ public class ContainerMapper {
         String displayName = computeDisplayName(name, project);
 
         return new ContainerDTO(
-                container.getId(),
-                name,
-                displayName,
-                imageFull,
-                ports,
-                iconUrl,
-                project,
-                state,
-                status);
+                container.getId(), name, displayName, imageFull, ports, iconUrl, project, state, status);
     }
 
     private String resolveIconUrl(String imageFull) {

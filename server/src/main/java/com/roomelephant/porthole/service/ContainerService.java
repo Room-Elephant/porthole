@@ -27,9 +27,8 @@ public class ContainerService {
     public @NonNull List<ContainerDTO> getContainers(boolean includeWithoutPorts, boolean includeStopped) {
         List<Container> containers;
         try {
-            containers = dockerClient.listContainersCmd()
-                    .withShowAll(includeStopped)
-                    .exec();
+            containers =
+                    dockerClient.listContainersCmd().withShowAll(includeStopped).exec();
         } catch (RuntimeException e) {
             if (isDockerConnectionError(e)) {
                 log.warn("Docker connection failed", e);

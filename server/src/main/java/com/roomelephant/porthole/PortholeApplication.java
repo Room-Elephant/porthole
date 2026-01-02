@@ -11,5 +11,4 @@ public class PortholeApplication {
     static void main(String[] args) {
         SpringApplication.run(PortholeApplication.class, args);
     }
-    
 }
