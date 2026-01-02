@@ -1,4 +1,6 @@
-package com.roomelephant.porthole.util;
+package com.roomelephant.porthole.domain.util;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -6,8 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("ImageUtils")
 class ImageUtilsTest {
@@ -130,16 +130,16 @@ class ImageUtilsTest {
 
         @ParameterizedTest
         @CsvSource({
-                "1.0, 2.0, -1",
-                "2.0, 1.0, 1",
-                "1.0, 1.0, 0",
-                "1.0.0, 1.0.1, -1",
-                "1.0.1, 1.0.0, 1",
-                "1.2.3, 1.2.3, 0",
-                "v1.0, v2.0, -1",
-                "v1.0, 1.0, 0",
-                "1.0, 1.0.0, 0",
-                "2.0, 1.9.9, 1"
+            "1.0, 2.0, -1",
+            "2.0, 1.0, 1",
+            "1.0, 1.0, 0",
+            "1.0.0, 1.0.1, -1",
+            "1.0.1, 1.0.0, 1",
+            "1.2.3, 1.2.3, 0",
+            "v1.0, v2.0, -1",
+            "v1.0, 1.0, 0",
+            "1.0, 1.0.0, 0",
+            "2.0, 1.9.9, 1"
         })
         @DisplayName("should compare versions correctly")
         void shouldCompareVersionsCorrectly(String v1, String v2, int expectedSign) {
@@ -161,4 +161,3 @@ class ImageUtilsTest {
         }
     }
 }
-

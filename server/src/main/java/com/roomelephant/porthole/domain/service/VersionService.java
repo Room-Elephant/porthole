@@ -1,21 +1,21 @@
-package com.roomelephant.porthole.service;
+package com.roomelephant.porthole.domain.service;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.InspectContainerResponse;
-import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.ContainerConfig;
-import com.roomelephant.porthole.component.RegistryService;
-import com.roomelephant.porthole.model.VersionDTO;
-import com.roomelephant.porthole.util.ImageUtils;
+import com.roomelephant.porthole.domain.component.RegistryService;
+import com.roomelephant.porthole.domain.model.VersionDTO;
+import com.roomelephant.porthole.domain.model.exception.DockerUnavailableException;
+import com.roomelephant.porthole.domain.model.exception.NotFoundException;
+import com.roomelephant.porthole.domain.model.exception.UnexpectedException;
+import com.roomelephant.porthole.domain.util.ImageUtils;
+import java.net.SocketException;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service
@@ -36,12 +36,13 @@ public class VersionService {
         InspectContainerResponse container;
         try {
             container = dockerClient.inspectContainerCmd(containerId).exec();
-        } catch (NotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Container not found: " + containerId);
-        } catch (Exception e) {
-            log.error("Failed to inspect container {}", containerId, e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Failed to inspect container: " + containerId);
+        } catch (com.github.dockerjava.api.exception.NotFoundException _) {
+            throw new NotFoundException(containerId);
+        } catch (RuntimeException e) {
+            if (isDockerConnectionError(e)) {
+                throw new DockerUnavailableException(e);
+            }
+            throw new UnexpectedException(e);
         }
 
         var config = container.getConfig();
@@ -51,10 +52,10 @@ public class VersionService {
 
         String imageFull = config.getImage();
 
+        String currentVersion = getVersionFromContainer(config, imageFull);
+
         List<String> repoDigests = getRepoDigests(container.getImageId());
         boolean isLocalImage = repoDigests == null || repoDigests.isEmpty();
-
-        String currentVersion = getVersionFromContainer(config, imageFull);
 
         if (isLocalImage) {
             return new VersionDTO(currentVersion, null, false);
@@ -70,7 +71,8 @@ public class VersionService {
         try {
             var inspectImage = dockerClient.inspectImageCmd(imageId).exec();
             return inspectImage.getRepoDigests();
-        } catch (Exception _) {
+        } catch (Exception e) {
+            log.error("Failed to inspect image: " + imageId, e);
             return null;
         }
     }
@@ -91,7 +93,7 @@ public class VersionService {
         return ImageUtils.extractTag(imageFull);
     }
 
-    private String getVersionFromEnvVars(String @Nullable [] envs, @NonNull String imageName) {
+    private @Nullable String getVersionFromEnvVars(String @Nullable [] envs, @NonNull String imageName) {
         if (envs == null) {
             return null;
         }
@@ -115,7 +117,7 @@ public class VersionService {
         return null;
     }
 
-    private String getVersionFromLabels(@Nullable Map<String, String> labels) {
+    private @Nullable String getVersionFromLabels(@Nullable Map<String, String> labels) {
         if (labels == null) {
             return null;
         }
@@ -128,8 +130,11 @@ public class VersionService {
         return null;
     }
 
-    private boolean checkForUpdate(@NonNull String imageFull, @Nullable String currentVersion,
-            @Nullable String latestVersion, @NonNull List<String> repoDigests) {
+    private boolean checkForUpdate(
+            @NonNull String imageFull,
+            @Nullable String currentVersion,
+            @Nullable String latestVersion,
+            @NonNull List<String> repoDigests) {
         String tag = ImageUtils.extractTag(imageFull);
 
         try {
@@ -140,8 +145,8 @@ public class VersionService {
                     return true;
                 }
             }
-        } catch (Exception _) {
-            // Squelch errors to avoid breaking UI
+        } catch (Exception e) {
+            log.error("Error checking for update: " + imageFull, e);
         }
 
         if (ImageUtils.isSemver(tag) && currentVersion != null && latestVersion != null) {
@@ -149,5 +154,9 @@ public class VersionService {
         }
 
         return false;
+    }
+
+    private boolean isDockerConnectionError(RuntimeException e) {
+        return e.getCause() instanceof SocketException;
     }
 }

@@ -1,10 +1,19 @@
-package com.roomelephant.porthole.service;
+package com.roomelephant.porthole.domain.service;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.ListContainersCmd;
 import com.github.dockerjava.api.model.Container;
-import com.roomelephant.porthole.mapper.ContainerMapper;
-import com.roomelephant.porthole.model.ContainerDTO;
+import com.roomelephant.porthole.domain.mapper.ContainerMapper;
+import com.roomelephant.porthole.domain.model.ContainerDTO;
+import com.roomelephant.porthole.domain.model.exception.DockerUnavailableException;
+import com.roomelephant.porthole.domain.model.exception.UnexpectedException;
+import java.net.SocketException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -12,16 +21,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.net.SocketException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ContainerService")
@@ -48,13 +47,12 @@ class ContainerServiceTest {
     class GetContainers {
 
         @Test
-        @DisplayName("should return all containers when includeWithoutPorts is true")
-        void shouldReturnAllContainersWhenIncludeWithoutPortsIsTrue() {
+        @DisplayName("should get containers with showAll=false")
+        void shouldGetContainersWithShowAllFalse() {
             Container container1 = createMockContainer();
             Container container2 = createMockContainer();
-
-            ContainerDTO dto1 = createContainerDTO("container1", Set.of(80));
-            ContainerDTO dto2 = createContainerDTO("container2", Collections.emptySet());
+            ContainerDTO dto1 = createContainerDTO("container1", Set.of(8080));
+            ContainerDTO dto2 = createContainerDTO("container2", Set.of(9090));
 
             when(dockerClient.listContainersCmd()).thenReturn(listContainersCmd);
             when(listContainersCmd.withShowAll(false)).thenReturn(listContainersCmd);
@@ -66,27 +64,8 @@ class ContainerServiceTest {
 
             assertEquals(2, result.size());
             verify(listContainersCmd).withShowAll(false);
-        }
-
-        @Test
-        @DisplayName("should filter containers without ports when includeWithoutPorts is false")
-        void shouldFilterContainersWithoutPortsWhenIncludeWithoutPortsIsFalse() {
-            Container container1 = createMockContainer();
-            Container container2 = createMockContainer();
-
-            ContainerDTO dto1 = createContainerDTO("container1", Set.of(80));
-            ContainerDTO dto2 = createContainerDTO("container2", Collections.emptySet());
-
-            when(dockerClient.listContainersCmd()).thenReturn(listContainersCmd);
-            when(listContainersCmd.withShowAll(false)).thenReturn(listContainersCmd);
-            when(listContainersCmd.exec()).thenReturn(List.of(container1, container2));
-            when(containerMapper.toDTO(container1)).thenReturn(dto1);
-            when(containerMapper.toDTO(container2)).thenReturn(dto2);
-
-            List<ContainerDTO> result = containerService.getContainers(false, false);
-
-            assertEquals(1, result.size());
-            assertEquals("container1", result.getFirst().name());
+            verify(containerMapper).toDTO(container1);
+            verify(containerMapper).toDTO(container2);
         }
 
         @Test
@@ -102,37 +81,50 @@ class ContainerServiceTest {
         }
 
         @Test
-        @DisplayName("should throw ResponseStatusException when Docker is not reachable")
-        void shouldThrowResponseStatusExceptionWhenDockerIsNotReachable() {
-            RuntimeException dockerException = new RuntimeException("Connection failed", new SocketException("Connection refused"));
+        @DisplayName("should filter containers without public ports when includeWithoutPorts is false")
+        void shouldFilterContainersWithoutPublicPorts() {
+            Container container1 = createMockContainer();
+            Container container2 = createMockContainer();
+            ContainerDTO dtoWithPorts = createContainerDTO("c1", Set.of(8080));
+            ContainerDTO dtoNoPorts = createContainerDTO("c2", Set.of());
+
+            when(dockerClient.listContainersCmd()).thenReturn(listContainersCmd);
+            when(listContainersCmd.withShowAll(anyBoolean())).thenReturn(listContainersCmd);
+            when(listContainersCmd.exec()).thenReturn(List.of(container1, container2));
+            when(containerMapper.toDTO(container1)).thenReturn(dtoWithPorts);
+            when(containerMapper.toDTO(container2)).thenReturn(dtoNoPorts);
+
+            List<ContainerDTO> result = containerService.getContainers(false, false);
+
+            assertEquals(1, result.size());
+            assertEquals(dtoWithPorts, result.get(0));
+        }
+
+        @Test
+        @DisplayName("should throw DockerUnavailableException when Docker is not reachable")
+        void shouldThrowDockerUnavailableExceptionWhenDockerIsNotReachable() {
+            RuntimeException dockerException =
+                    new RuntimeException("Connection failed", new SocketException("Connection refused"));
 
             when(dockerClient.listContainersCmd()).thenReturn(listContainersCmd);
             when(listContainersCmd.withShowAll(anyBoolean())).thenReturn(listContainersCmd);
             when(listContainersCmd.exec()).thenThrow(dockerException);
 
-            ResponseStatusException exception = assertThrows(
-                    ResponseStatusException.class,
-                    () -> containerService.getContainers(false, false)
-            );
-
-            assertEquals("Docker is not reachable", exception.getReason());
+            assertThrows(DockerUnavailableException.class, () -> containerService.getContainers(true, false));
         }
 
         @Test
-        @DisplayName("should rethrow non-connection RuntimeExceptions")
-        void shouldRethrowNonConnectionRuntimeExceptions() {
+        @DisplayName("should throw UnexpectedException for non-connection RuntimeExceptions")
+        void shouldThrowUnexpectedExceptionForNonConnectionRuntimeExceptions() {
             RuntimeException otherException = new RuntimeException("Some other error");
 
             when(dockerClient.listContainersCmd()).thenReturn(listContainersCmd);
             when(listContainersCmd.withShowAll(anyBoolean())).thenReturn(listContainersCmd);
             when(listContainersCmd.exec()).thenThrow(otherException);
 
-            RuntimeException thrown = assertThrows(
-                    RuntimeException.class,
-                    () -> containerService.getContainers(false, false)
-            );
-
-            assertEquals("Some other error", thrown.getMessage());
+            UnexpectedException thrown =
+                    assertThrows(UnexpectedException.class, () -> containerService.getContainers(true, false));
+            assertEquals("Some other error", thrown.getCause().getMessage());
         }
 
         @Test
@@ -162,8 +154,6 @@ class ContainerServiceTest {
                 "https://example.com/nginx.png",
                 null,
                 "running",
-                "Up 2 hours"
-        );
+                "Up 2 hours");
     }
 }
-

@@ -1,4 +1,7 @@
-package com.roomelephant.porthole.service;
+package com.roomelephant.porthole.domain.service;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.InspectContainerCmd;
@@ -6,8 +9,13 @@ import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.command.InspectImageCmd;
 import com.github.dockerjava.api.command.InspectImageResponse;
 import com.github.dockerjava.api.model.ContainerConfig;
-import com.roomelephant.porthole.component.RegistryService;
-import com.roomelephant.porthole.model.VersionDTO;
+import com.roomelephant.porthole.domain.component.RegistryService;
+import com.roomelephant.porthole.domain.model.VersionDTO;
+import com.roomelephant.porthole.domain.model.exception.NotFoundException;
+import com.roomelephant.porthole.domain.model.exception.UnexpectedException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -15,14 +23,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("VersionService")
@@ -61,32 +61,25 @@ class VersionServiceTest {
     class GetVersionInfo {
 
         @Test
-        @DisplayName("should throw ResponseStatusException when container not found")
-        void shouldThrowResponseStatusExceptionWhenContainerNotFound() {
+        @DisplayName("should throw NotFoundException when container not found")
+        void shouldThrowNotFoundExceptionWhenContainerNotFound() {
             when(dockerClient.inspectContainerCmd("unknown")).thenReturn(inspectContainerCmd);
             when(inspectContainerCmd.exec())
                     .thenThrow(new com.github.dockerjava.api.exception.NotFoundException("Not found"));
 
-            ResponseStatusException exception = assertThrows(
-                    ResponseStatusException.class,
-                    () -> versionService.getVersionInfo("unknown"));
+            NotFoundException exception =
+                    assertThrows(NotFoundException.class, () -> versionService.getVersionInfo("unknown"));
 
-            assertEquals(404, exception.getStatusCode().value());
-            assertTrue(exception.getReason().contains("Container not found"));
+            assertEquals("unknown", exception.getContainerId());
         }
 
         @Test
-        @DisplayName("should throw ResponseStatusException when docker fails")
-        void shouldThrowResponseStatusExceptionWhenDockerFails() {
+        @DisplayName("should throw UnexpectedException when docker fails")
+        void shouldThrowUnexpectedExceptionWhenDockerFails() {
             when(dockerClient.inspectContainerCmd("container1")).thenReturn(inspectContainerCmd);
             when(inspectContainerCmd.exec()).thenThrow(new RuntimeException("Docker error"));
 
-            ResponseStatusException exception = assertThrows(
-                    ResponseStatusException.class,
-                    () -> versionService.getVersionInfo("container1"));
-
-            assertEquals(500, exception.getStatusCode().value());
-            assertTrue(exception.getReason().contains("Failed to inspect container"));
+            assertThrows(UnexpectedException.class, () -> versionService.getVersionInfo("container1"));
         }
 
         @Test
@@ -172,7 +165,7 @@ class VersionServiceTest {
         void shouldReturnVersionFromEnvironmentVariable() {
             setupContainerWithImage("nginx:latest");
             setupRemoteImage();
-            when(containerConfig.getEnv()).thenReturn(new String[] { "NGINX_VERSION=1.25.0" });
+            when(containerConfig.getEnv()).thenReturn(new String[] {"NGINX_VERSION=1.25.0"});
             when(registryService.getLatestVersion("nginx:latest")).thenReturn("1.26.0");
             when(registryService.getDigest("nginx:latest", "latest")).thenReturn("sha256:remote");
 
@@ -186,7 +179,7 @@ class VersionServiceTest {
         void shouldReturnVersionFromGenericVersionEnvVar() {
             setupContainerWithImage("myapp:latest");
             setupRemoteImage();
-            when(containerConfig.getEnv()).thenReturn(new String[] { "VERSION=3.0.0" });
+            when(containerConfig.getEnv()).thenReturn(new String[] {"VERSION=3.0.0"});
             when(registryService.getLatestVersion("myapp:latest")).thenReturn("3.1.0");
             when(registryService.getDigest("myapp:latest", "latest")).thenReturn("sha256:remote");
 
@@ -294,7 +287,7 @@ class VersionServiceTest {
         void shouldSkipEmptyEnvVarValues() {
             setupContainerWithImage("nginx:latest");
             setupRemoteImage();
-            when(containerConfig.getEnv()).thenReturn(new String[] { "NGINX_VERSION=", "VERSION=" });
+            when(containerConfig.getEnv()).thenReturn(new String[] {"NGINX_VERSION=", "VERSION="});
             when(containerConfig.getLabels()).thenReturn(null);
             when(registryService.getLatestVersion("nginx:latest")).thenReturn("1.26.0");
             when(registryService.getDigest("nginx:latest", "latest")).thenReturn("sha256:remote");
@@ -354,7 +347,7 @@ class VersionServiceTest {
         void shouldSkipUnrelatedEnvVars() {
             setupContainerWithImage("nginx:latest");
             setupRemoteImage();
-            when(containerConfig.getEnv()).thenReturn(new String[] { "OTHER_VAR=value", "PATH=/bin" });
+            when(containerConfig.getEnv()).thenReturn(new String[] {"OTHER_VAR=value", "PATH=/bin"});
             when(containerConfig.getLabels()).thenReturn(null);
             when(registryService.getLatestVersion("nginx:latest")).thenReturn("1.26.0");
             when(registryService.getDigest("nginx:latest", "latest")).thenReturn("sha256:local");
