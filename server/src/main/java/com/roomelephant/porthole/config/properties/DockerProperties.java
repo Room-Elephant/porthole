@@ -8,6 +8,6 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public record DockerProperties(
                 @NotBlank(message = "Docker host must be configured") String host,
-                @NotBlank(message = "Connection timeout must be configured") java.time.Duration connectionTimeout,
-                @NotBlank(message = "Response timeout must be configured") java.time.Duration responseTimeout) {
+                @jakarta.validation.constraints.NotNull(message = "Connection timeout must be configured") java.time.Duration connectionTimeout,
+                @jakarta.validation.constraints.NotNull(message = "Response timeout must be configured") java.time.Duration responseTimeout) {
 }
