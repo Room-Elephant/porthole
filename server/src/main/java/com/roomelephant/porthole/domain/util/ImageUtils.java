@@ -31,11 +31,14 @@ public final class ImageUtils {
             return UNKNOWN_IMAGE_NAME;
         }
 
-        return switch (image) {
-            case String s when s.contains("/") -> s.substring(s.lastIndexOf("/") + 1);
-            case String s when s.contains(":") -> s.substring(0, s.indexOf(":"));
-            default -> image;
-        };
+        String name = image;
+        if (name.contains("/")) {
+            name = name.substring(name.lastIndexOf("/") + 1);
+        }
+        if (name.contains(":")) {
+            name = name.substring(0, name.indexOf(":"));
+        }
+        return name;
     }
 
     /**
