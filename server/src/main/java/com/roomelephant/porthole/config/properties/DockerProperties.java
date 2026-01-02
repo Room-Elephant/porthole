@@ -7,7 +7,7 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "docker")
 @Validated
 public record DockerProperties(
-        @NotBlank(message = "Docker host must be configured")
-        String host
-) {}
-
+                @NotBlank(message = "Docker host must be configured") String host,
+                @NotBlank(message = "Connection timeout must be configured") java.time.Duration connectionTimeout,
+                @NotBlank(message = "Response timeout must be configured") java.time.Duration responseTimeout) {
+}

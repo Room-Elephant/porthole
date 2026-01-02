@@ -22,12 +22,6 @@ import java.util.Optional;
 @Slf4j
 public class RegistryService {
 
-    private static final String REGISTRY_URL = "https://registry-1.docker.io/v2/";
-    private static final String REGISTRY_URL_MANIFESTS = "/manifests/";
-    private static final String AUTH_URL = "https://auth.docker.io/token?service=registry.docker.io&scope=repository:";
-    private static final String AUTH_URL_PULL = ":pull";
-    private static final String REPOSITORIES_URL = "https://hub.docker.com/v2/repositories/";
-    private static final String REPOSITORIES_URL_TAGS = "/tags?page_size=100";
     private static final String BEARER = "Bearer ";
     private static final String TOKEN = "token";
     private static final String ACCEPT_HEADER = "application/vnd.docker.distribution.manifest.v2+json";
@@ -38,11 +32,13 @@ public class RegistryService {
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
+    private final RegistryProperties registryProperties;
     private final Cache<String, String> versionCache;
     private final Cache<String, Optional<String>> tokenCache;
 
     public RegistryService(RestClient restClient, RegistryProperties registryProperties) {
         this.restClient = restClient;
+        this.registryProperties = registryProperties;
         this.objectMapper = new ObjectMapper();
         this.versionCache = Caffeine.newBuilder()
                 .expireAfterWrite(registryProperties.cache().ttl())
@@ -73,7 +69,7 @@ public class RegistryService {
         try {
             return versionCache.get(imageName, this::fetchLatestVersion);
         } catch (Exception e) {
-            log.debug("Could not fetch tags for {}", imageName);
+            log.error("Could not fetch tags for {}", imageName, e);
             return null;
         }
     }
@@ -84,7 +80,8 @@ public class RegistryService {
     }
 
     private @Nullable String fetchDigest(String tag, String repository, String token) {
-        String url = REGISTRY_URL + repository + REGISTRY_URL_MANIFESTS + tag;
+        // e.g. https://registry-1.docker.io/v2/ + repo + /manifests/ + tag
+        String url = registryProperties.urls().registry() + repository + "/manifests/" + tag;
 
         var response = restClient.head()
                 .uri(url)
@@ -101,32 +98,42 @@ public class RegistryService {
     }
 
     private Optional<String> fetchAuthToken(String repository) {
+        // e.g.
+        // https://auth.docker.io/token?service=registry.docker.io&scope=repository: +
+        // repo + :pull
+        String url = registryProperties.urls().auth() + repository + ":pull";
         try {
-            String url = AUTH_URL + repository + AUTH_URL_PULL;
             String responseBody = restClient.get()
                     .uri(url)
                     .retrieve()
                     .body(String.class);
-            if (responseBody == null) return Optional.empty();
+            if (responseBody == null) {
+                return Optional.empty();
+            }
             JsonNode response = objectMapper.readTree(responseBody);
-            return response.has(TOKEN) ? Optional.of(response.get(TOKEN).asText()) : Optional.empty();
+            boolean hasToken = response.has(TOKEN);
+            return hasToken ? Optional.of(response.get(TOKEN).asText()) : Optional.empty();
         } catch (Exception e) {
-            log.debug("Could not fetch auth token for {}", repository);
+            log.error("Could not fetch auth token for {} at URL {}", repository, url, e);
             return Optional.empty();
         }
     }
 
     private @Nullable String fetchLatestFromHub(String repository) {
-        String url = REPOSITORIES_URL + repository + REPOSITORIES_URL_TAGS;
+        // e.g. https://hub.docker.com/v2/repositories/ + repo + /tags?page_size=100
+        String url = registryProperties.urls().repositories() + repository + "/tags?page_size=100";
         try {
             String responseBody = restClient.get()
                     .uri(url)
                     .retrieve()
                     .body(String.class);
-            if (responseBody == null) return null;
-            JsonNode response = objectMapper.readTree(responseBody);
-            if (!response.has(RESULTS))
+
+            if (responseBody == null)
                 return null;
+            JsonNode response = objectMapper.readTree(responseBody);
+            if (!response.has(RESULTS)) {
+                return null;
+            }
 
             List<String> tags = new ArrayList<>();
             for (JsonNode result : response.get(RESULTS)) {
@@ -137,11 +144,13 @@ public class RegistryService {
             }
 
             tags.sort(ImageUtils::compareSemVer);
-            if (tags.isEmpty())
+            if (tags.isEmpty()) {
                 return null;
+            }
 
             return tags.getLast();
-        } catch (Exception _) {
+        } catch (Exception e) {
+            log.error("Error in fetchLatestFromHub", e);
             return null;
         }
     }

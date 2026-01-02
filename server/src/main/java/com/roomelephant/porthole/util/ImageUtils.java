@@ -27,6 +27,9 @@ public final class ImageUtils {
      * Example: "my-reg/nginx:latest" → "nginx", "postgres:15" → "postgres"
      */
     public static @NonNull String extractName(String image) {
+        if (image == null) {
+            return "unknown";
+        }
         String name = image;
         if (name.contains("/")) {
             name = name.substring(name.lastIndexOf("/") + 1);
@@ -43,9 +46,25 @@ public final class ImageUtils {
      * Example: "redis" → "library/redis", "bitnami/redis:7" → "bitnami/redis"
      */
     public static @NonNull String resolveRepository(@NonNull String image) {
-        String repository = image.contains("/") ? image : LIBRARY + image;
-        int colonIndex = repository.indexOf(":");
-        return colonIndex != -1 ? repository.substring(0, colonIndex) : repository;
+        String repo = image;
+        // Strip tag if present (colon after the last slash)
+        int lastColon = repo.lastIndexOf(':');
+        int lastSlash = repo.lastIndexOf('/');
+        if (lastColon > lastSlash) {
+            repo = repo.substring(0, lastColon);
+        }
+
+        // Strip registry host if present
+        int firstSlash = repo.indexOf('/');
+        if (firstSlash != -1) {
+            String prefix = repo.substring(0, firstSlash);
+            if (prefix.contains(".") || prefix.contains(":") || prefix.equals("localhost")) {
+                repo = repo.substring(firstSlash + 1);
+            }
+        }
+
+        // Add library prefix for official images
+        return repo.contains("/") ? repo : LIBRARY + repo;
     }
 
     /**
@@ -74,4 +93,3 @@ public final class ImageUtils {
         return 0;
     }
 }
-

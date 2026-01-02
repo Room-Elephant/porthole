@@ -11,28 +11,28 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "registry")
 @Validated
 public record RegistryProperties(
-        @Valid
-        @NotNull(message = "Timeout configuration is required")
-        Timeout timeout,
+                @Valid @NotNull(message = "Timeout configuration is required") Timeout timeout,
 
-        @Valid
-        @NotNull(message = "Cache configuration is required")
-        Cache cache
-) {
-    public record Timeout(
-            @NotNull(message = "Connect timeout must be configured")
-            Duration connect,
+                @Valid @NotNull(message = "Cache configuration is required") Cache cache,
 
-            @NotNull(message = "Read timeout must be configured")
-            Duration read
-    ) {}
+                @Valid @NotNull(message = "URLs configuration is required") Urls urls) {
+        public record Urls(
+                        @NotNull(message = "Registry URL must be configured") String registry,
 
-    public record Cache(
-            @NotNull(message = "Cache TTL must be configured")
-            Duration ttl,
+                        @NotNull(message = "Auth URL must be configured") String auth,
 
-            @Positive(message = "Version cache size must be positive")
-            int versionMaxSize
-    ) {}
+                        @NotNull(message = "Repositories URL must be configured") String repositories) {
+        }
+
+        public record Timeout(
+                        @NotNull(message = "Connect timeout must be configured") Duration connect,
+
+                        @NotNull(message = "Read timeout must be configured") Duration read) {
+        }
+
+        public record Cache(
+                        @NotNull(message = "Cache TTL must be configured") Duration ttl,
+
+                        @Positive(message = "Version cache size must be positive") int versionMaxSize) {
+        }
 }
-

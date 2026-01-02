@@ -1,5 +1,6 @@
 package com.roomelephant.porthole.controller;
 
+import com.github.dockerjava.api.model.Container;
 import com.roomelephant.porthole.model.ContainerDTO;
 import com.roomelephant.porthole.model.VersionDTO;
 import com.roomelephant.porthole.service.ContainerService;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -40,11 +42,11 @@ class ContainerControllerTest {
         @Test
         @DisplayName("should return containers with default parameters")
         void shouldReturnContainersWithDefaultParameters() throws Exception {
-            List<ContainerDTO> containers = List.of(
-                    createContainerDTO("container1"),
-                    createContainerDTO("container2")
-            );
-            when(containerService.getContainers(false, false)).thenReturn(containers);
+            ContainerDTO dto1 = createContainerDTO("container1");
+            ContainerDTO dto2 = createContainerDTO("container2");
+            List<ContainerDTO> containerDTOs = List.of(dto1, dto2);
+
+            when(containerService.getContainers(false, false)).thenReturn(containerDTOs);
 
             mockMvc.perform(get("/api/containers"))
                     .andExpect(status().isOk())
@@ -58,11 +60,15 @@ class ContainerControllerTest {
         @Test
         @DisplayName("should pass includeWithoutPorts parameter")
         void shouldPassIncludeWithoutPortsParameter() throws Exception {
-            when(containerService.getContainers(true, false)).thenReturn(Collections.emptyList());
+            ContainerDTO dtoWithPort = createContainerDTO("c1");
+            ContainerDTO dtoNoPort = createContainerDTO("c2", Collections.emptySet());
+
+            when(containerService.getContainers(true, false)).thenReturn(List.of(dtoWithPort, dtoNoPort));
 
             mockMvc.perform(get("/api/containers")
-                            .param("includeWithoutPorts", "true"))
-                    .andExpect(status().isOk());
+                    .param("includeWithoutPorts", "true"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(2));
 
             verify(containerService).getContainers(true, false);
         }
@@ -73,7 +79,7 @@ class ContainerControllerTest {
             when(containerService.getContainers(false, true)).thenReturn(Collections.emptyList());
 
             mockMvc.perform(get("/api/containers")
-                            .param("includeStopped", "true"))
+                    .param("includeStopped", "true"))
                     .andExpect(status().isOk());
 
             verify(containerService).getContainers(false, true);
@@ -85,8 +91,8 @@ class ContainerControllerTest {
             when(containerService.getContainers(true, true)).thenReturn(Collections.emptyList());
 
             mockMvc.perform(get("/api/containers")
-                            .param("includeWithoutPorts", "true")
-                            .param("includeStopped", "true"))
+                    .param("includeWithoutPorts", "true")
+                    .param("includeStopped", "true"))
                     .andExpect(status().isOk());
 
             verify(containerService).getContainers(true, true);
@@ -135,16 +141,19 @@ class ContainerControllerTest {
     }
 
     private ContainerDTO createContainerDTO(String name) {
+        return createContainerDTO(name, Set.of(80));
+    }
+
+    private ContainerDTO createContainerDTO(String name, Set<Integer> ports) {
         return new ContainerDTO(
                 name + "-id",
                 name,
                 name,
                 "nginx:latest",
-                Set.of(80),
+                ports,
                 "https://example.com/nginx.png",
                 "test-project",
                 "running",
-                "Up 1 hour"
-        );
+                "Up 1 hour");
     }
 }

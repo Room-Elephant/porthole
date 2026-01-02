@@ -70,7 +70,8 @@ public class VersionService {
         try {
             var inspectImage = dockerClient.inspectImageCmd(imageId).exec();
             return inspectImage.getRepoDigests();
-        } catch (Exception _) {
+        } catch (Exception e) {
+            log.error("Failed to inspect image: " + imageId, e);
             return null;
         }
     }
@@ -140,8 +141,8 @@ public class VersionService {
                     return true;
                 }
             }
-        } catch (Exception _) {
-            // Squelch errors to avoid breaking UI
+        } catch (Exception e) {
+            log.error("Error checking for update: " + imageFull, e);
         }
 
         if (ImageUtils.isSemver(tag) && currentVersion != null && latestVersion != null) {

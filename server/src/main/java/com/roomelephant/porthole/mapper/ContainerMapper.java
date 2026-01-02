@@ -29,10 +29,12 @@ public class ContainerMapper {
     public @NonNull ContainerDTO toDTO(@NonNull Container container) {
         String name = container.getNames().length > 0 ? container.getNames()[0].substring(1) : UNKNOWN;
         String imageFull = container.getImage();
-        Set<Integer> ports = Arrays.stream(container.getPorts())
-                .map(ContainerPort::getPublicPort)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+        Set<Integer> ports = container.getPorts() != null
+                ? Arrays.stream(container.getPorts())
+                        .map(ContainerPort::getPublicPort)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet())
+                : Set.of();
 
         String iconUrl = resolveIconUrl(imageFull);
 
@@ -67,4 +69,3 @@ public class ContainerMapper {
         return name;
     }
 }
-

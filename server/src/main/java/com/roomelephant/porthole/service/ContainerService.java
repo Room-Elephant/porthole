@@ -34,7 +34,7 @@ public class ContainerService {
         } catch (RuntimeException e) {
             if (isDockerConnectionError(e)) {
                 log.warn("Docker connection failed", e);
-                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Docker is not reachable");
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Docker is not reachable", e);
             }
             throw e;
         }
