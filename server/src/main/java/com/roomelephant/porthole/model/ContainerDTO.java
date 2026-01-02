@@ -1,7 +1,6 @@
 package com.roomelephant.porthole.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.Set;
 
 public record ContainerDTO(

@@ -4,14 +4,13 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.Container;
 import com.roomelephant.porthole.mapper.ContainerMapper;
 import com.roomelephant.porthole.model.ContainerDTO;
+import java.net.SocketException;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.net.SocketException;
-import java.util.List;
 
 @Slf4j
 @Service

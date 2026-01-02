@@ -2,17 +2,16 @@ package com.roomelephant.porthole.mapper;
 
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.ContainerPort;
-import com.roomelephant.porthole.model.ContainerDTO;
 import com.roomelephant.porthole.component.IconComponent;
+import com.roomelephant.porthole.model.ContainerDTO;
 import com.roomelephant.porthole.util.ImageUtils;
-import org.jspecify.annotations.NonNull;
-import org.springframework.stereotype.Component;
-
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.NonNull;
+import org.springframework.stereotype.Component;
 
 @Component
 public class ContainerMapper {

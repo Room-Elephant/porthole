@@ -1,8 +1,7 @@
 package com.roomelephant.porthole.util;
 
-import org.jspecify.annotations.NonNull;
-
 import java.util.regex.Pattern;
+import org.jspecify.annotations.NonNull;
 
 public final class ImageUtils {
 

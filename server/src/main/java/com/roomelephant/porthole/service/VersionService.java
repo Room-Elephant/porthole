@@ -7,15 +7,14 @@ import com.github.dockerjava.api.model.ContainerConfig;
 import com.roomelephant.porthole.component.RegistryService;
 import com.roomelephant.porthole.model.VersionDTO;
 import com.roomelephant.porthole.util.ImageUtils;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service

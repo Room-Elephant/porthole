@@ -1,10 +1,9 @@
 package com.roomelephant.porthole.component;
 
 import com.roomelephant.porthole.config.properties.DashboardProperties;
+import java.util.Map;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
-
-import java.util.Map;
 
 @Service
 public class IconComponent {
