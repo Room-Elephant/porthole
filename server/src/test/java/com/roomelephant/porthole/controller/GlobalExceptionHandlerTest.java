@@ -10,9 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
-import org.springframework.web.server.ResponseStatusException;
 
 @DisplayName("GlobalExceptionHandler")
 class GlobalExceptionHandlerTest {
@@ -80,46 +78,6 @@ class GlobalExceptionHandlerTest {
     }
 
     @Nested
-    @DisplayName("handleResponseStatusException")
-    class HandleResponseStatusException {
-
-        @Test
-        @DisplayName("should return ProblemDetail with correct status for NOT_FOUND")
-        void shouldReturnProblemDetailWithCorrectStatusForNotFound() {
-            ResponseStatusException exception =
-                    new ResponseStatusException(HttpStatus.NOT_FOUND, "Container not found");
-
-            ProblemDetail result = exceptionHandler.handleResponseStatusException(exception);
-
-            assertEquals(404, result.getStatus());
-            assertEquals("Container not found", result.getDetail());
-            assertEquals(URI.create("about:blank"), result.getType());
-        }
-
-        @Test
-        @DisplayName("should return ProblemDetail with correct status for BAD_GATEWAY")
-        void shouldReturnProblemDetailWithCorrectStatusForBadGateway() {
-            ResponseStatusException exception =
-                    new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Docker is not reachable");
-
-            ProblemDetail result = exceptionHandler.handleResponseStatusException(exception);
-
-            assertEquals(502, result.getStatus());
-            assertEquals("Docker is not reachable", result.getDetail());
-        }
-
-        @Test
-        @DisplayName("should handle null reason")
-        void shouldHandleNullReason() {
-            ResponseStatusException exception = new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
-
-            ProblemDetail result = exceptionHandler.handleResponseStatusException(exception);
-
-            assertEquals(500, result.getStatus());
-        }
-    }
-
-    @Nested
     @DisplayName("handleIllegalArgument")
     class HandleIllegalArgument {
 
@@ -145,26 +103,6 @@ class GlobalExceptionHandlerTest {
 
             assertEquals(400, result.getStatus());
             assertEquals("", result.getDetail());
-        }
-    }
-
-    @Nested
-    @DisplayName("handleNoResourceFound")
-    class HandleNoResourceFound {
-
-        @Test
-        @DisplayName("should return ProblemDetail with NOT_FOUND status")
-        void shouldReturnProblemDetailWithNotFoundStatus() {
-            org.springframework.web.servlet.resource.NoResourceFoundException exception =
-                    new org.springframework.web.servlet.resource.NoResourceFoundException(
-                            org.springframework.http.HttpMethod.GET, "/.well-known/appspecific", "resource");
-
-            ProblemDetail result = exceptionHandler.handleNoResourceFound(exception);
-
-            assertEquals(404, result.getStatus());
-            assertEquals("No static resource resource for request '/.well-known/appspecific'.", result.getDetail());
-            assertEquals("Not Found", result.getTitle());
-            assertEquals(URI.create("about:blank"), result.getType());
         }
     }
 
