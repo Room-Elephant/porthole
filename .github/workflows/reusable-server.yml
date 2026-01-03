@@ -25,18 +25,22 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Check code formatting
+        working-directory: server
+        run: mvn spotless:check -B
+
       - name: Build without tests
         working-directory: server
-        run: mvn compile -DskipTests -B
+        run: mvn compile -DskipTests -Dspotless.check.skip=true -B
 
-      - name: Run tests with coverage
+      - name: Run unit tests with coverage
         working-directory: server
-        run: mvn test -B
+        run: mvn test -Dspotless.check.skip=true -B
 
-      - name: Generate coverage summary
+      - name: Generate unit test coverage summary
         if: ${{ inputs.upload_coverage }}
         run: |
-          echo "## Coverage Report for server" >> $GITHUB_STEP_SUMMARY
+          echo "## Unit Test Coverage Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Status | Category | Percentage | Covered / Total |" >> $GITHUB_STEP_SUMMARY
           echo "|:------:|----------|------------|-----------------|" >> $GITHUB_STEP_SUMMARY
@@ -54,3 +58,15 @@ jobs:
               printf "| %s | Instructions | %.2f%% (🎯 80%%) | %d / %d |\n", icon(ip,80), ip, inst_c, inst_c+inst_m
             }
           ' server/target/site/jacoco/jacoco.csv >> $GITHUB_STEP_SUMMARY
+
+      - name: Run integration tests
+        working-directory: server
+        run: mvn verify -Pintegration-tests -Dspotless.check.skip=true -B
+
+      - name: Publish integration test results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: server/target/failsafe-reports/TEST-*.xml
+          check_name: Integration Test Results
+          comment_mode: off
