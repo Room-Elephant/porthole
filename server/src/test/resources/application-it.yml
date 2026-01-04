@@ -2,6 +2,14 @@ logging:
   level:
     com.roomelephant.porthole: INFO
 
-docker:
-  connection-timeout: 500ms
-  response-timeout: 500ms
+porthole:
+  docker:
+    host: tcp://localhost:2375
+    connection-timeout: 500ms
+    response-timeout: 500ms
+
+registry:
+  urls:
+    registry: http://localhost:8089/v2/
+    auth: "http://localhost:8089/auth?service=registry.docker.io&scope=repository:"
+    repositories: http://localhost:8089/v2/repositories/
