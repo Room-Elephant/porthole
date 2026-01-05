@@ -1,4 +1,4 @@
-package com.roomelephant.porthole.it;
+package com.roomelephant.porthole.it.resilience;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -56,8 +56,8 @@ class DockerConnectionFailureIT {
             socketFile = File.createTempFile("docker-failure-test", ".sock");
             socketFile.delete(); // Ensure it starts non-existent
 
-            // Point docker.host to this file path
-            registry.add("docker.host", () -> "unix://" + socketFile.getAbsolutePath());
+            // Point porthole.docker.host to this file path
+            registry.add("porthole.docker.host", () -> "unix://" + socketFile.getAbsolutePath());
 
             // Dummy registry properties to satisfy startup requirements
             registry.add("registry.urls.registry", () -> "http://localhost:9999/v2/");
