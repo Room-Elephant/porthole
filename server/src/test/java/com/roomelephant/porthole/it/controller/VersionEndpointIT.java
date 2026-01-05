@@ -28,13 +28,13 @@ class VersionEndpointIT extends IntegrationTestBase {
 
     @Test
     void shouldReturnUpdateAvailableWhenNewerVersionExists() {
-        stubRegistryTags("busybox", "1.35.0", "1.36.1");
+        stubRegistryTags("busybox", "1.37.0-uclibc", "1.36.1");
         stubManifestDigest("busybox", "1.36.1", "sha256:newdigest");
-        stubManifestDigest("busybox", "1.35.0", "sha256:currentdiggest");
+        stubManifestDigest("busybox", "1.37.0-uclibc", "sha256:currentdiggest");
 
         VersionDTO response = fetchVersion(dockerInfra.getTestAppContainer().getContainerId());
 
-        assertThat(response.currentVersion()).isEqualTo("1.35.0");
+        assertThat(response.currentVersion()).isEqualTo("1.37.0-uclibc");
         assertThat(response.latestVersion()).isEqualTo("1.36.1");
         assertThat(response.updateAvailable()).isTrue();
     }

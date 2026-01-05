@@ -38,7 +38,7 @@ class ContainersEndpointIT extends IntegrationTestBase {
         ContainerDTO container = containersByName.get(DockerInfrastructure.TEST_APP_CONTAINER_NAME);
         assertThat(container).isNotNull();
         assertThat(container.displayName()).isEqualTo(DockerInfrastructure.TEST_APP_CONTAINER_NAME);
-        assertThat(container.image()).isEqualTo(DockerInfrastructure.BUSYBOX_1_35_0);
+        assertThat(container.image()).isEqualTo(DockerInfrastructure.BUSYBOX_IMAGE);
         assertThat(container.exposedPorts()).size().isEqualTo(1);
         assertThat(container.exposedPorts())
                 .first()
@@ -89,7 +89,7 @@ class ContainersEndpointIT extends IntegrationTestBase {
         ContainerDTO container = containersByName.get(DockerInfrastructure.TEST_NO_PORTS_CONTAINER_NAME);
         assertThat(container).isNotNull();
         assertThat(container.displayName()).isEqualTo(DockerInfrastructure.TEST_NO_PORTS_CONTAINER_NAME);
-        assertThat(container.image()).isEqualTo(DockerInfrastructure.BUSYBOX_1_35_0);
+        assertThat(container.image()).isEqualTo(DockerInfrastructure.BUSYBOX_IMAGE);
         assertThat(container.exposedPorts()).isEmpty();
         assertThat(container.iconUrl()).contains("/busybox.");
         assertThat(container.state()).isEqualTo("running");
@@ -113,7 +113,7 @@ class ContainersEndpointIT extends IntegrationTestBase {
         ContainerDTO container = containersByName.get(DockerInfrastructure.TEST_STOPPED_CONTAINER_NAME);
         assertThat(container).isNotNull();
         assertThat(container.displayName()).isEqualTo(DockerInfrastructure.TEST_STOPPED_CONTAINER_NAME);
-        assertThat(container.image()).isEqualTo(DockerInfrastructure.BUSYBOX_1_35_0);
+        assertThat(container.image()).isEqualTo(DockerInfrastructure.BUSYBOX_IMAGE);
         assertThat(container.exposedPorts()).isEmpty();
         assertThat(container.iconUrl()).contains("/busybox.");
         assertThat(container.state()).isIn("running", "created");

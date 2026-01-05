@@ -32,7 +32,7 @@ public class DockerInfrastructure implements AutoCloseable {
     public static final String TEST_NO_PORTS_CONTAINER_NAME = "porthole-test-no-ports";
     public static final String TEST_STOPPED_CONTAINER_NAME = "porthole-test-stopped";
     public static final String TEST_LOCAL_CONTAINER_NAME = "porthole-test-local";
-    public static final String BUSYBOX_1_35_0 = "busybox:1.35.0";
+    public static final String BUSYBOX_IMAGE = "busybox:1.37.0-uclibc";
 
     private final GenericContainer<?> docker;
     private final DockerClient sharedDockerClient;
@@ -124,11 +124,17 @@ public class DockerInfrastructure implements AutoCloseable {
     private void createAndStartContainers() throws Exception {
         DockerClient dockerClient = getDetailsDockerClient();
 
+        // Cleanup any existing containers from previous runs (due to persistent volume)
+        removeContainerQuietly(dockerClient, TEST_APP_CONTAINER_NAME);
+        removeContainerQuietly(dockerClient, TEST_STOPPED_CONTAINER_NAME);
+        removeContainerQuietly(dockerClient, TEST_NO_PORTS_CONTAINER_NAME);
+        removeContainerQuietly(dockerClient, TEST_LOCAL_CONTAINER_NAME);
+
         // Ensure BusyBox image is available
-        dockerClient.pullImageCmd(BUSYBOX_1_35_0).start().awaitCompletion();
+        dockerClient.pullImageCmd(BUSYBOX_IMAGE).start().awaitCompletion();
 
         // App Container (Running with ports)
-        testAppContainer = new DinDContainer<>(DockerImageName.parse(BUSYBOX_1_35_0), sharedDockerClient)
+        testAppContainer = new DinDContainer<>(DockerImageName.parse(BUSYBOX_IMAGE), sharedDockerClient)
                 .withCommand(CONTAINER_CMD)
                 .withExposedPorts(8080)
                 .waitingFor(new AbstractWaitStrategy() {
@@ -143,7 +149,7 @@ public class DockerInfrastructure implements AutoCloseable {
 
         // Stopped Container
         var stoppedResponse = dockerClient
-                .createContainerCmd(BUSYBOX_1_35_0)
+                .createContainerCmd(BUSYBOX_IMAGE)
                 .withName(TEST_STOPPED_CONTAINER_NAME)
                 .withCmd(CONTAINER_CMD)
                 .withExposedPorts(ExposedPort.tcp(8081))
@@ -151,7 +157,7 @@ public class DockerInfrastructure implements AutoCloseable {
         stoppedContainerId = stoppedResponse.getId();
 
         // No Ports Container
-        noPortsContainer = new DinDContainer<>(DockerImageName.parse(BUSYBOX_1_35_0), sharedDockerClient)
+        noPortsContainer = new DinDContainer<>(DockerImageName.parse(BUSYBOX_IMAGE), sharedDockerClient)
                 .withCommand(CONTAINER_CMD)
                 // No withExposedPorts
                 .waitingFor(new AbstractWaitStrategy() {
@@ -166,7 +172,7 @@ public class DockerInfrastructure implements AutoCloseable {
 
         // Local Image Container
         Path tempDir = Files.createTempDirectory("porthole-test-context");
-        Files.writeString(tempDir.resolve("Dockerfile"), "FROM " + BUSYBOX_1_35_0);
+        Files.writeString(tempDir.resolve("Dockerfile"), "FROM " + BUSYBOX_IMAGE);
 
         dockerClient
                 .buildImageCmd(tempDir.toFile())
