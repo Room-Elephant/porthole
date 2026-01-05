@@ -261,6 +261,7 @@
             <id>integration-tests</id>
             <properties>
                 <jacoco.skip>true</jacoco.skip>
+                <spotless.check.skip>true</spotless.check.skip>
             </properties>
             <build>
                 <plugins>
