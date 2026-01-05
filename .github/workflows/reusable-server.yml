@@ -61,6 +61,8 @@ jobs:
 
       - name: Run integration tests
         working-directory: server
+        env:
+          CI: true
         run: mvn verify -Pintegration-tests -Dspotless.check.skip=true -B
 
       - name: Publish integration test results
