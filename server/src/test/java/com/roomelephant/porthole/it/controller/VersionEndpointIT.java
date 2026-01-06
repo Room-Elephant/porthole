@@ -32,7 +32,7 @@ class VersionEndpointIT extends IntegrationTestBase {
         stubManifestDigest("busybox", "1.36.1", "sha256:newdigest");
         stubManifestDigest("busybox", "1.37.0-uclibc", "sha256:currentdiggest");
 
-        VersionDTO response = fetchVersion(dockerInfra.getTestAppContainer().getContainerId());
+        VersionDTO response = fetchVersion(testAppContainer.getContainerId());
 
         assertThat(response.currentVersion()).isEqualTo("1.37.0-uclibc");
         assertThat(response.latestVersion()).isEqualTo("1.36.1");
@@ -51,7 +51,7 @@ class VersionEndpointIT extends IntegrationTestBase {
         // correct behavior
         // for local-only images. The test verifies latestVersion=null and
         // updateAvailable=false
-        VersionDTO response = fetchVersion(dockerInfra.getLocalContainer().getContainerId());
+        VersionDTO response = fetchVersion(localContainer.getContainerId());
 
         // Verify results
         // Current version should be detected (from tag 1.0)

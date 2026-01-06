@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpStatus.OK;
 
 import com.roomelephant.porthole.domain.model.ContainerDTO;
-import com.roomelephant.porthole.it.infra.DockerInfrastructure;
 import com.roomelephant.porthole.it.infra.IntegrationTestBase;
 import com.roomelephant.porthole.it.infra.RunWithoutContainers;
 import java.util.Arrays;
@@ -35,38 +34,30 @@ class ContainersEndpointIT extends IntegrationTestBase {
 
         assertThat(containersByName).hasSize(2);
 
-        ContainerDTO container = containersByName.get(DockerInfrastructure.TEST_APP_CONTAINER_NAME);
+        ContainerDTO container = containersByName.get(TEST_APP_CONTAINER_NAME);
         assertThat(container).isNotNull();
-        assertThat(container.displayName()).isEqualTo(DockerInfrastructure.TEST_APP_CONTAINER_NAME);
-        assertThat(container.image()).isEqualTo(DockerInfrastructure.BUSYBOX_IMAGE);
+        assertThat(container.displayName()).isEqualTo(TEST_APP_CONTAINER_NAME);
+        assertThat(container.image()).isEqualTo(BUSYBOX_IMAGE);
         assertThat(container.exposedPorts()).size().isEqualTo(1);
         assertThat(container.exposedPorts())
                 .first()
-                .isEqualTo(dockerInfra
-                        .getTestAppContainer()
-                        .getMappedPort(dockerInfra
-                                .getTestAppContainer()
-                                .getExposedPorts()
-                                .getFirst()));
+                .isEqualTo(testAppContainer.getMappedPort(
+                        testAppContainer.getExposedPorts().getFirst()));
         assertThat(container.iconUrl()).contains("/busybox.");
         assertThat(container.state()).isIn("running", "created");
         assertThat(container.status()).contains("Up");
         assertThat(container.project()).isNull();
         assertThat(container.hasPublicPorts()).isTrue();
 
-        container = containersByName.get(DockerInfrastructure.TEST_LOCAL_CONTAINER_NAME);
+        container = containersByName.get(TEST_LOCAL_CONTAINER_NAME);
         assertThat(container).isNotNull();
-        assertThat(container.displayName()).isEqualTo(DockerInfrastructure.TEST_LOCAL_CONTAINER_NAME);
+        assertThat(container.displayName()).isEqualTo(TEST_LOCAL_CONTAINER_NAME);
         assertThat(container.image()).isEqualTo("my-local-image:1.0");
         assertThat(container.exposedPorts()).size().isEqualTo(1);
         assertThat(container.exposedPorts())
                 .first()
-                .isEqualTo(dockerInfra
-                        .getLocalContainer()
-                        .getMappedPort(dockerInfra
-                                .getLocalContainer()
-                                .getExposedPorts()
-                                .getFirst()));
+                .isEqualTo(localContainer.getMappedPort(
+                        localContainer.getExposedPorts().getFirst()));
         assertThat(container.iconUrl()).contains("/my-local-image.");
         assertThat(container.state()).isIn("running", "created");
         assertThat(container.status()).contains("Up");
@@ -79,17 +70,16 @@ class ContainersEndpointIT extends IntegrationTestBase {
         Map<String, ContainerDTO> containersByName = fetchContainers(false, false);
 
         assertThat(containersByName).hasSize(2);
-        assertThat(containersByName.get(DockerInfrastructure.TEST_NO_PORTS_CONTAINER_NAME))
-                .isNull();
+        assertThat(containersByName.get(TEST_NO_PORTS_CONTAINER_NAME)).isNull();
 
         containersByName = fetchContainers(true, false);
 
         assertThat(containersByName).hasSize(3);
 
-        ContainerDTO container = containersByName.get(DockerInfrastructure.TEST_NO_PORTS_CONTAINER_NAME);
+        ContainerDTO container = containersByName.get(TEST_NO_PORTS_CONTAINER_NAME);
         assertThat(container).isNotNull();
-        assertThat(container.displayName()).isEqualTo(DockerInfrastructure.TEST_NO_PORTS_CONTAINER_NAME);
-        assertThat(container.image()).isEqualTo(DockerInfrastructure.BUSYBOX_IMAGE);
+        assertThat(container.displayName()).isEqualTo(TEST_NO_PORTS_CONTAINER_NAME);
+        assertThat(container.image()).isEqualTo(BUSYBOX_IMAGE);
         assertThat(container.exposedPorts()).isEmpty();
         assertThat(container.iconUrl()).contains("/busybox.");
         assertThat(container.state()).isEqualTo("running");
@@ -103,17 +93,16 @@ class ContainersEndpointIT extends IntegrationTestBase {
         Map<String, ContainerDTO> containersByName = fetchContainers(false, false);
 
         assertThat(containersByName).hasSize(2);
-        assertThat(containersByName.get(DockerInfrastructure.TEST_STOPPED_CONTAINER_NAME))
-                .isNull();
+        assertThat(containersByName.get(TEST_STOPPED_CONTAINER_NAME)).isNull();
 
         containersByName = fetchContainers(true, true);
 
         assertThat(containersByName).hasSize(4);
 
-        ContainerDTO container = containersByName.get(DockerInfrastructure.TEST_STOPPED_CONTAINER_NAME);
+        ContainerDTO container = containersByName.get(TEST_STOPPED_CONTAINER_NAME);
         assertThat(container).isNotNull();
-        assertThat(container.displayName()).isEqualTo(DockerInfrastructure.TEST_STOPPED_CONTAINER_NAME);
-        assertThat(container.image()).isEqualTo(DockerInfrastructure.BUSYBOX_IMAGE);
+        assertThat(container.displayName()).isEqualTo(TEST_STOPPED_CONTAINER_NAME);
+        assertThat(container.image()).isEqualTo(BUSYBOX_IMAGE);
         assertThat(container.exposedPorts()).isEmpty();
         assertThat(container.iconUrl()).contains("/busybox.");
         assertThat(container.state()).isIn("running", "created");
