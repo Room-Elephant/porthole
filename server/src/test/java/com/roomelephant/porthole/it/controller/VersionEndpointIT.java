@@ -41,22 +41,10 @@ class VersionEndpointIT extends IntegrationTestBase {
 
     @Test
     void shouldReturnNoUpdateForLocalImage() {
-        // The localContainer is already running a local-only image (my-local-image:1.0)
-        // See IntegrationTestBase.createAndStartContainers()
+        stubRegistryTags404("my-local-image");
 
-        // Query the version endpoint for the local container
-        // Note: This test intentionally does NOT stub registry endpoints for
-        // my-local-image
-        // The service will get 404s when trying to fetch tags/manifest, which is
-        // correct behavior
-        // for local-only images. The test verifies latestVersion=null and
-        // updateAvailable=false
         VersionDTO response = fetchVersion(localContainer.getContainerId());
 
-        // Verify results
-        // Current version should be detected (from tag 1.0)
-        // Latest version should be null (no remote to check)
-        // Update available should be false
         assertThat(response.currentVersion()).isEqualTo("1.0");
         assertThat(response.latestVersion()).isNull();
         assertThat(response.updateAvailable()).isFalse();
@@ -71,8 +59,6 @@ class VersionEndpointIT extends IntegrationTestBase {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
-    // WireMock helper methods to reduce verbosity
-
     /**
      * Stub Docker registry tags endpoint with given versions
      *
@@ -83,7 +69,7 @@ class VersionEndpointIT extends IntegrationTestBase {
         StringBuilder tagsJson = new StringBuilder("{\"results\": [");
         for (int i = 0; i < versions.length; i++) {
             if (i > 0) {
-                tagsJson.append(", ");
+                tagsJson.append(",");
             }
             tagsJson.append("{\"name\": \"").append(versions[i]).append("\"}");
         }
@@ -93,6 +79,11 @@ class VersionEndpointIT extends IntegrationTestBase {
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody(tagsJson.toString())));
+    }
+
+    void stubRegistryTags404(String image) {
+        wireMock.stubFor(get(urlEqualTo("/v2/repositories/library/" + image + "/tags?page_size=100"))
+                .willReturn(aResponse().withStatus(404)));
     }
 
     /**
@@ -111,10 +102,9 @@ class VersionEndpointIT extends IntegrationTestBase {
     }
 
     protected @NotNull VersionDTO fetchVersion(String containerId) {
-        ResponseEntity<@NotNull VersionDTO> response =
-                fetch("/api/containers/" + containerId + "/version", VersionDTO.class);
-
+        ResponseEntity<VersionDTO> response = fetch("/api/containers/" + containerId + "/version", VersionDTO.class);
         assertThat(response.getStatusCode()).isEqualTo(OK);
+
         assertThat(response.getBody()).isNotNull();
 
         return response.getBody();
