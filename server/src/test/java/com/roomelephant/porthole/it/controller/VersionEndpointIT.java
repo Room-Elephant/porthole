@@ -28,14 +28,14 @@ class VersionEndpointIT extends IntegrationTestBase {
 
     @Test
     void shouldReturnUpdateAvailableWhenNewerVersionExists() {
-        stubRegistryTags("busybox", "1.37.0-uclibc", "1.36.1");
-        stubManifestDigest("busybox", "1.36.1", "sha256:newdigest");
+        stubRegistryTags("busybox", "1.37.0-uclibc", "1.38.1");
+        stubManifestDigest("busybox", "1.38.1", "sha256:newdigest");
         stubManifestDigest("busybox", "1.37.0-uclibc", "sha256:currentdiggest");
 
         VersionDTO response = fetchVersion(testAppContainer.getContainerId());
 
         assertThat(response.currentVersion()).isEqualTo("1.37.0-uclibc");
-        assertThat(response.latestVersion()).isEqualTo("1.36.1");
+        assertThat(response.latestVersion()).isEqualTo("1.38.1");
         assertThat(response.updateAvailable()).isTrue();
     }
 
@@ -57,6 +57,54 @@ class VersionEndpointIT extends IntegrationTestBase {
         ResponseEntity<String> response = fetch("/api/containers/" + nonExistentId + "/version");
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void shouldReturnNoUpdateWhenLatestTagMatchesDigest() {
+        String containerId = noPortsContainer.getContainerId();
+        String currentDigest = getLocalDigest(BUSYBOX_LATEST_IMAGE);
+
+        stubRegistryTags("busybox", "latest", "1.37.0-uclibc");
+        stubManifestDigest("busybox", "latest", currentDigest);
+
+        VersionDTO response = fetchVersion(containerId);
+
+        assertThat(response.currentVersion()).isEqualTo("latest");
+        assertThat(response.latestVersion()).isNull();
+        assertThat(response.updateAvailable()).isFalse();
+    }
+
+    @Test
+    void shouldReturnUpdateWhenLatestTagAndDigestIsOlder() {
+        String containerId = noPortsContainer.getContainerId();
+
+        stubRegistryTags("busybox", "latest", "1.37.0-uclibc");
+        stubManifestDigest("busybox", "latest", "sha256:newerdigest");
+
+        VersionDTO response = fetchVersion(containerId);
+
+        assertThat(response.currentVersion()).isEqualTo("latest");
+        assertThat(response.latestVersion()).isNull();
+        assertThat(response.updateAvailable()).isTrue();
+    }
+
+    @Test
+    void shouldReturnUpdateWhenLatestTagAndCurrentVersionIsOlder() {
+        String containerId = noPortsContainer.getContainerId();
+
+        stubRegistryTags("busybox", "latest", "1.37.0-uclibc");
+        stubManifestDigest("busybox", "latest", "sha256:somedifferentdigest");
+
+        VersionDTO response = fetchVersion(containerId);
+
+        assertThat(response.updateAvailable()).isTrue();
+    }
+
+    private String getLocalDigest(String imageName) {
+        return noPortsContainer.getDockerClient().inspectImageCmd(imageName).exec().getRepoDigests().stream()
+                .findFirst()
+                .map(d -> d.contains("@") ? d.substring(d.indexOf("@") + 1) : d)
+                .orElse(imageName);
     }
 
     /**

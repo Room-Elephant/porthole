@@ -32,6 +32,7 @@ public abstract class IntegrationTestBase {
     protected static final String TEST_STOPPED_CONTAINER_NAME = "porthole-test-stopped";
     protected static final String TEST_LOCAL_CONTAINER_NAME = "porthole-test-local";
     protected static final String BUSYBOX_IMAGE = "busybox:1.37.0-uclibc";
+    protected static final String BUSYBOX_LATEST_IMAGE = "busybox:latest";
 
     protected static GenericContainer<?> testAppContainer;
     protected static GenericContainer<?> localContainer;
@@ -124,6 +125,7 @@ public abstract class IntegrationTestBase {
 
     private void createContainers() {
         dockerInfra.pullImage(BUSYBOX_IMAGE);
+        dockerInfra.pullImage(BUSYBOX_LATEST_IMAGE);
 
         // App Container (Running with ports)
         dockerInfra.removeContainerQuietly(TEST_APP_CONTAINER_NAME);
@@ -142,7 +144,7 @@ public abstract class IntegrationTestBase {
 
         // No Ports Container
         dockerInfra.removeContainerQuietly(TEST_NO_PORTS_CONTAINER_NAME);
-        noPortsContainer = dockerInfra.buildImage(BUSYBOX_IMAGE, null, TEST_NO_PORTS_CONTAINER_NAME);
+        noPortsContainer = dockerInfra.buildImage(BUSYBOX_LATEST_IMAGE, null, TEST_NO_PORTS_CONTAINER_NAME);
         noPortsContainer.start();
     }
 }
