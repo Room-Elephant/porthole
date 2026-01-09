@@ -40,10 +40,12 @@ class DockerConnectionFailureIT {
     void setup() {
         this.restTemplate = new RestTemplate();
         this.restTemplate.setErrorHandler(new ResponseErrorHandler() {
+          @Override
             public boolean hasError(ClientHttpResponse response) {
                 return false;
             }
 
+          @SuppressWarnings("unused")
             public void handleError(ClientHttpResponse response) {}
         });
     }

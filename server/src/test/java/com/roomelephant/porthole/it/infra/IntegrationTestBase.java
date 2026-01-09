@@ -62,10 +62,12 @@ public abstract class IntegrationTestBase {
         RestTemplate template = new RestTemplate();
         template.setErrorHandler(new ResponseErrorHandler() {
 
+          @Override
             public boolean hasError(ClientHttpResponse response) throws IOException {
                 return response.getStatusCode().is5xxServerError();
             }
 
+            @SuppressWarnings("unused")
             public void handleError(ClientHttpResponse response) throws IOException {}
         });
         return template;
