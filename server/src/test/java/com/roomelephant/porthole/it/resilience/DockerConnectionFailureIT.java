@@ -17,11 +17,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -39,15 +37,7 @@ class DockerConnectionFailureIT {
     @BeforeEach
     void setup() {
         this.restTemplate = new RestTemplate();
-        this.restTemplate.setErrorHandler(new ResponseErrorHandler() {
-          @Override
-            public boolean hasError(ClientHttpResponse response) {
-                return false;
-            }
-
-          @SuppressWarnings("unused")
-            public void handleError(ClientHttpResponse response) {}
-        });
+        this.restTemplate.setErrorHandler(response -> false);
     }
 
     protected @NotNull String createURLWithPort(String uri) {

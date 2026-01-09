@@ -6,7 +6,6 @@ import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
-import java.io.IOException;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
@@ -18,9 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 import org.testcontainers.containers.GenericContainer;
 
@@ -60,16 +57,7 @@ public abstract class IntegrationTestBase {
 
     private static RestTemplate createRestTemplate() {
         RestTemplate template = new RestTemplate();
-        template.setErrorHandler(new ResponseErrorHandler() {
-
-          @Override
-            public boolean hasError(ClientHttpResponse response) throws IOException {
-                return response.getStatusCode().is5xxServerError();
-            }
-
-            @SuppressWarnings("unused")
-            public void handleError(ClientHttpResponse response) throws IOException {}
-        });
+        template.setErrorHandler(response -> response.getStatusCode().is5xxServerError());
         return template;
     }
 
