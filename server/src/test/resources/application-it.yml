@@ -13,3 +13,6 @@ registry:
     registry: http://localhost:8089/v2/
     auth: "http://localhost:8089/auth?service=registry.docker.io&scope=repository:"
     repositories: http://localhost:8089/v2/repositories/
+  cache:
+    ttl: 1ms
+    version-max-size: 1

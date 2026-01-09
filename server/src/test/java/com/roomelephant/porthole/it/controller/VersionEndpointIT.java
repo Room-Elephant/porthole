@@ -11,7 +11,6 @@ import static org.springframework.http.HttpStatus.OK;
 import com.roomelephant.porthole.domain.model.VersionDTO;
 import com.roomelephant.porthole.it.infra.IntegrationTestBase;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -20,18 +19,11 @@ import org.springframework.http.ResponseEntity;
 @Order(4)
 class VersionEndpointIT extends IntegrationTestBase {
 
-    @BeforeEach
-    void setupAuthStub() {
-        wireMock.stubFor(get(urlMatching("/auth.*"))
-                .willReturn(aResponse()
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("{\"token\":\"mock-token\"}")));
-    }
-
     @Test
     void shouldReturnUpdateAvailableWhenNewerVersionExists() {
+        stubAuth();
         stubRegistryTags("busybox", "1.37.0-uclibc", "1.38.1");
-        stubManifestDigest("busybox", "1.38.1", "sha256:newdigest");
+        // Digest for new version 1.38.1 is not fetched because tag comparison is enough
         stubManifestDigest("busybox", "1.37.0-uclibc", "sha256:currentdiggest");
 
         VersionDTO response = fetchVersion(testAppContainer.getContainerId());
@@ -43,7 +35,9 @@ class VersionEndpointIT extends IntegrationTestBase {
 
     @Test
     void shouldReturnNoUpdateForLocalImage() {
+        stubAuth();
         stubRegistryTags404("my-local-image");
+        stubManifest404("my-local-image", "1.0");
 
         VersionDTO response = fetchVersion(localContainer.getContainerId());
 
@@ -63,6 +57,7 @@ class VersionEndpointIT extends IntegrationTestBase {
 
     @Test
     void shouldReturnNoUpdateWhenLatestTagMatchesDigest() {
+        stubAuth();
         String containerId = noPortsContainer.getContainerId();
         String currentDigest = getLocalDigest(BUSYBOX_LATEST_IMAGE);
 
@@ -78,6 +73,7 @@ class VersionEndpointIT extends IntegrationTestBase {
 
     @Test
     void shouldReturnUpdateWhenLatestTagAndDigestIsOlder() {
+        stubAuth();
         String containerId = noPortsContainer.getContainerId();
 
         stubRegistryTags("busybox", "latest", "1.37.0-uclibc");
@@ -92,6 +88,7 @@ class VersionEndpointIT extends IntegrationTestBase {
 
     @Test
     void shouldReturnUpdateWhenLatestTagAndCurrentVersionIsOlder() {
+        stubAuth();
         String containerId = noPortsContainer.getContainerId();
 
         stubRegistryTags("busybox", "latest", "1.37.0-uclibc");
@@ -109,8 +106,16 @@ class VersionEndpointIT extends IntegrationTestBase {
                 .orElse(imageName);
     }
 
+    void stubAuth() {
+        wireMock.stubFor(get(urlMatching("/auth.*"))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"token\":\"mock-token\"}")));
+    }
+
     /**
      * Stub Docker registry tags endpoint with given versions
+     *
      *
      * @param image    Image name (e.g., "busybox")
      * @param versions Array of version strings (e.g., "1.35.0", "1.36.1")
@@ -133,6 +138,11 @@ class VersionEndpointIT extends IntegrationTestBase {
 
     void stubRegistryTags404(String image) {
         wireMock.stubFor(get(urlEqualTo("/v2/repositories/library/" + image + "/tags?page_size=100"))
+                .willReturn(aResponse().withStatus(404)));
+    }
+
+    void stubManifest404(String image, String version) {
+        wireMock.stubFor(head(urlMatching("/v2/library/" + image + "/manifests/" + version))
                 .willReturn(aResponse().withStatus(404)));
     }
 

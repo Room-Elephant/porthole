@@ -4,8 +4,12 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
+import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import java.io.IOException;
+import java.util.List;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -79,6 +83,34 @@ public abstract class IntegrationTestBase {
         }
 
         createContainers();
+    }
+
+    @AfterEach
+    protected void tearDown() {
+        List<ServeEvent> allServeEvents = wireMock.getAllServeEvents();
+
+        List<ServeEvent> unmatchedEvents =
+                allServeEvents.stream().filter(event -> !event.getWasMatched()).toList();
+
+        if (!unmatchedEvents.isEmpty()) {
+            String details = unmatchedEvents.stream()
+                    .map(e -> e.getRequest().getMethod() + " " + e.getRequest().getUrl())
+                    .toList()
+                    .toString();
+            throw new AssertionError("The following requests were made but not matched by any stub: " + details);
+        }
+
+        List<StubMapping> allStubs = wireMock.getStubMappings();
+
+        List<StubMapping> unusedStubs = allStubs.stream()
+                .filter(stub -> allServeEvents.stream()
+                        .noneMatch(event -> event.getStubMapping() != null
+                                && event.getStubMapping().getId().equals(stub.getId())))
+                .toList();
+
+        if (!unusedStubs.isEmpty()) {
+            throw new AssertionError("The following stubs were defined but never matched: " + unusedStubs);
+        }
     }
 
     protected void pauseDocker() {
