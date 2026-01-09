@@ -15,6 +15,7 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 @Service
@@ -134,6 +135,8 @@ public class RegistryService {
             }
 
             return tags.getLast();
+        } catch (HttpClientErrorException.NotFound e) {
+            return null;
         } catch (Exception e) {
             log.error("Error in fetchLatestFromHub", e);
             return null;

@@ -12,10 +12,12 @@ import com.roomelephant.porthole.domain.model.VersionDTO;
 import com.roomelephant.porthole.it.infra.IntegrationTestBase;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+@Order(4)
 class VersionEndpointIT extends IntegrationTestBase {
 
     @BeforeEach

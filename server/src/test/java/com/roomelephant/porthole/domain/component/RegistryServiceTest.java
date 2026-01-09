@@ -133,6 +133,23 @@ class RegistryServiceTest {
         }
 
         @Test
+        @DisplayName("should return null when hub returns 404")
+        void shouldReturnNullWhenHubReturns404() {
+            setupGetRequest();
+            when(responseSpec.body(String.class))
+                    .thenThrow(org.springframework.web.client.HttpClientErrorException.create(
+                            org.springframework.http.HttpStatus.NOT_FOUND,
+                            "Not Found",
+                            org.springframework.http.HttpHeaders.EMPTY,
+                            null,
+                            null));
+
+            String result = registryService.getLatestVersion("nginx");
+
+            assertNull(result);
+        }
+
+        @Test
         @DisplayName("should return null when hub request fails")
         void shouldReturnNullWhenHubRequestFails() {
             setupGetRequest();

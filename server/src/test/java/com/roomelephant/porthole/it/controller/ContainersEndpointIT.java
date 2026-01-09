@@ -18,6 +18,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.http.ResponseEntity;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Order(3)
 class ContainersEndpointIT extends IntegrationTestBase {
     @Test
     @Order(1)
@@ -79,7 +80,7 @@ class ContainersEndpointIT extends IntegrationTestBase {
         ContainerDTO container = containersByName.get(TEST_NO_PORTS_CONTAINER_NAME);
         assertThat(container).isNotNull();
         assertThat(container.displayName()).isEqualTo(TEST_NO_PORTS_CONTAINER_NAME);
-        assertThat(container.image()).isEqualTo(BUSYBOX_IMAGE);
+        assertThat(container.image()).isEqualTo(BUSYBOX_LATEST_IMAGE);
         assertThat(container.exposedPorts()).isEmpty();
         assertThat(container.iconUrl()).contains("/busybox.");
         assertThat(container.state()).isEqualTo("running");

@@ -5,6 +5,7 @@ import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE;
 
 import com.roomelephant.porthole.it.infra.IntegrationTestBase;
+import com.roomelephant.porthole.it.infra.RunWithoutContainers;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -12,10 +13,12 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.http.ResponseEntity;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Order(2)
 class DockerHealthIT extends IntegrationTestBase {
 
     @Test
     @Order(1)
+    @RunWithoutContainers
     void shouldReturnUpWhenDockerIsReachableAndRequestOnlyDockerComponent() {
         ResponseEntity<String> response = fetch("/actuator/health/docker");
 
@@ -25,6 +28,7 @@ class DockerHealthIT extends IntegrationTestBase {
 
     @Test
     @Order(2)
+    @RunWithoutContainers
     void shouldReturnUpWhenDockerIsReachable() {
         ResponseEntity<String> response = fetch("/actuator/health");
 
@@ -35,6 +39,7 @@ class DockerHealthIT extends IntegrationTestBase {
 
     @Test
     @Order(999)
+    @RunWithoutContainers
     void shouldReturnDownWhenDockerIsUnreachable() {
         pauseDocker();
 
