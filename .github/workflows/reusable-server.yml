@@ -26,17 +26,25 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Cache Docker images
+        uses: actions/cache@v4
+        with:
+          path: docker-cache
+          key: docker-images-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            docker-images-${{ runner.os }}-
+
       - name: Check code formatting
         working-directory: server
-        run: mvn spotless:check -B
+        run: mvn -B -ntp spotless:check
 
       - name: Build without tests
         working-directory: server
-        run: mvn compile -DskipTests -Dspotless.check.skip=true -B
+        run: mvn -B -ntp compile -DskipTests -Dspotless.check.skip=true
 
       - name: Run unit tests with coverage
         working-directory: server
-        run: mvn test -Dspotless.check.skip=true -B
+        run: mvn -B -ntp test -Dspotless.check.skip=true
 
       - name: Generate unit test coverage summary
         if: ${{ inputs.upload_coverage }}
@@ -64,7 +72,8 @@ jobs:
         working-directory: server
         env:
           CI: true
-        run: mvn verify -Pintegration-tests -Dspotless.check.skip=true -B
+          DOCKER_CACHE_PATH: ${{ github.workspace }}/docker-cache
+        run: mvn -B -ntp verify -Pintegration-tests -Dspotless.check.skip=true
 
       - name: Publish integration test results
         if: always()

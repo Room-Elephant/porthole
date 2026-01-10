@@ -33,18 +33,17 @@ public class DockerInfrastructure implements AutoCloseable {
     private final DockerClient sharedDockerClient;
 
     public DockerInfrastructure() {
+        String ci = System.getenv("CI");
+        String dockerCachePath =
+                "true".equalsIgnoreCase(ci) ? System.getenv("DOCKER_CACHE_PATH") : "porthole-dind-data";
+
         docker = new GenericContainer<>("docker:dind")
                 .withPrivilegedMode(true)
                 .withExposedPorts(DIND_PORT)
-                .withCreateContainerCmdModifier(cmd -> {
-                    var hostConfig = cmd.getHostConfig()
-                            .withPortBindings(
-                                    new PortBinding(Ports.Binding.bindPort(DIND_PORT), ExposedPort.tcp(DIND_PORT)));
-                    if (!"true".equalsIgnoreCase(System.getenv("CI"))) {
-                        hostConfig.withBinds(new Bind("porthole-dind-data", new Volume("/var/lib/docker")));
-                    }
-                    cmd.withHostConfig(hostConfig);
-                })
+                .withCreateContainerCmdModifier(cmd -> cmd.withHostConfig(cmd.getHostConfig()
+                        .withPortBindings(
+                                new PortBinding(Ports.Binding.bindPort(DIND_PORT), ExposedPort.tcp(DIND_PORT)))
+                        .withBinds(new Bind(dockerCachePath, new Volume("/var/lib/docker")))))
                 .withEnv("DOCKER_TLS_CERTDIR", "")
                 .withSharedMemorySize(512L * 1024 * 1024) // 512MB
                 .waitingFor(forLogMessage(".*API listen on \\[::\\]:2375.*", 1));
