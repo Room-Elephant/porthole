@@ -30,9 +30,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: docker-cache
-          key: docker-images-${{ runner.os }}-${{ hashFiles('server/pom.xml') }}
+          key: docker-images-v2-${{ runner.os }}-${{ hashFiles('server/pom.xml') }}
           restore-keys: |
-            docker-images-${{ runner.os }}-
+            docker-images-v2-${{ runner.os }}-
 
       - name: Check code formatting
         working-directory: server
@@ -80,6 +80,7 @@ jobs:
         run: |
           if [ -d "docker-cache" ]; then
             sudo chown -R $USER:$USER docker-cache
+            find docker-cache \( -type b -o -type c -o -type s -o -type p \) -delete
             sudo chmod -R a+rX docker-cache
           fi
 
