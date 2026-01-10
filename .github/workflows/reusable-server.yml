@@ -31,12 +31,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: host-docker-images
-          key: host-docker-images-${{ runner.os }}-docker-29.1.4-dind
+          key: host-docker-images-${{ runner.os }}-docker-29.1.4-dind-ryuk-0.13.0
 
       - name: Load Cached Docker Images
         if: steps.cache-host-docker.outputs.cache-hit == 'true'
         run: |
           docker load -i host-docker-images/docker-dind.tar
+          docker load -i host-docker-images/ryuk.tar
 
       - name: Pull and Save Docker Images
         if: steps.cache-host-docker.outputs.cache-hit != 'true'
@@ -44,6 +45,9 @@ jobs:
           mkdir -p host-docker-images
           docker pull docker:29.1.4-dind
           docker save -o host-docker-images/docker-dind.tar docker:29.1.4-dind
+          
+          docker pull testcontainers/ryuk:0.13.0
+          docker save -o host-docker-images/ryuk.tar testcontainers/ryuk:0.13.0
 
       - name: Cache Docker-in-Docker images
         uses: actions/cache@v4
