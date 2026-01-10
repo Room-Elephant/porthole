@@ -27,15 +27,15 @@ public class DockerInfrastructure implements AutoCloseable {
     }
 
     public static final int DIND_PORT = 2375;
-    public static final String[] CONTAINER_CMD = { "sh", "-c", "echo started; while true; do sleep 3600; done" };
+    public static final String[] CONTAINER_CMD = {"sh", "-c", "echo started; while true; do sleep 3600; done"};
 
     private final GenericContainer<?> docker;
     private final DockerClient sharedDockerClient;
 
     public DockerInfrastructure() {
         String ci = System.getenv("CI");
-        String dockerCachePath = "true".equalsIgnoreCase(ci) ? System.getenv("DOCKER_CACHE_PATH")
-                : "porthole-dind-data";
+        String dockerCachePath =
+                "true".equalsIgnoreCase(ci) ? System.getenv("DOCKER_CACHE_PATH") : "porthole-dind-data";
 
         docker = new GenericContainer<>("docker:29.1.4-dind")
                 .withPrivilegedMode(true)
