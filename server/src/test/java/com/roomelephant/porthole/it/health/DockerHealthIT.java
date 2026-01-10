@@ -50,7 +50,7 @@ class DockerHealthIT extends IntegrationTestBase {
             assertThat(response.getBody()).contains("\"status\":\"DOWN\"");
             assertThat(response.getBody())
                     .contains(
-                            "\"docker\":{\"details\":{\"Error connecting to docker\":\"Read timed out\"},\"status\":\"DOWN\"}");
+                            "\"docker\":{\"details\":{\"Unexpected exception\":\"java.net.SocketTimeoutException: Read timed out\"},\"status\":\"DOWN\"}");
         } finally {
             unpauseDocker();
         }

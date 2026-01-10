@@ -22,14 +22,20 @@ public class DockerHealthIndicator implements HealthIndicator {
             dockerClient.pingCmd().exec();
             return Health.up().build();
         } catch (RuntimeException e) {
-            String errorMessage = e.getMessage();
-            if (e.getCause() != null) {
-                errorMessage = e.getCause().getMessage();
+            if (isDockerConnectionError(e)) {
+                String errorMessage = e.getCause().getMessage();
+                log.error("Error connecting to docker: {}", errorMessage);
+                return Health.down()
+                        .withDetail("Error connecting to docker", errorMessage)
+                        .build();
             }
-            log.error("Error connecting to docker: {}", errorMessage);
             return Health.down()
-                    .withDetail("Error connecting to docker", errorMessage)
+                    .withDetail("Unexpected exception", e.getMessage())
                     .build();
         }
+    }
+
+    private boolean isDockerConnectionError(RuntimeException e) {
+        return e.getCause() instanceof java.net.SocketException;
     }
 }
