@@ -30,7 +30,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: docker-cache
-          key: docker-images-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          key: docker-images-${{ runner.os }}-${{ hashFiles('server/pom.xml') }}
           restore-keys: |
             docker-images-${{ runner.os }}-
 
