@@ -71,7 +71,7 @@ class DockerHealthIndicatorTest {
         Health health = healthIndicator.health();
 
         assertEquals("DOWN", health.getStatus().toString());
-        assertTrue(health.getDetails().containsKey("Unexpected exception"));
-        assertEquals("Connection refused", health.getDetails().get("Unexpected exception"));
+        assertTrue(health.getDetails().containsKey("Error connecting to docker"));
+        assertEquals("Connection refused", health.getDetails().get("Error connecting to docker"));
     }
 }

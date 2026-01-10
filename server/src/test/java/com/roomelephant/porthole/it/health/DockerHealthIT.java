@@ -48,7 +48,7 @@ class DockerHealthIT extends IntegrationTestBase {
 
             assertThat(response.getStatusCode().value()).isEqualTo(SERVICE_UNAVAILABLE.value());
             assertThat(response.getBody()).contains("\"status\":\"DOWN\"");
-            assertThat(response.getBody()).contains("\"docker\":{\"status\":\"DOWN\"}");
+            assertThat(response.getBody()).contains("\"docker\":{\"details\":{\"Error connecting to docker\":\"Read timed out\"},\"status\":\"DOWN\"}");
         } finally {
             unpauseDocker();
         }

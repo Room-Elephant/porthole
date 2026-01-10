@@ -1,12 +1,13 @@
 package com.roomelephant.porthole.config;
 
 import com.github.dockerjava.api.DockerClient;
-import java.net.SocketException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class DockerHealthIndicator implements HealthIndicator {
 
     private final DockerClient dockerClient;
@@ -21,18 +22,14 @@ public class DockerHealthIndicator implements HealthIndicator {
             dockerClient.pingCmd().exec();
             return Health.up().build();
         } catch (RuntimeException e) {
-            if (isDockerConnectionError(e)) {
-                return Health.down()
-                        .withDetail("Error connecting to docker", e.getCause().getMessage())
-                        .build();
+            String errorMessage = e.getMessage();
+            if (e.getCause() != null) {
+                errorMessage = e.getCause().getMessage();
             }
+            log.error("Error connecting to docker: {}", errorMessage);
             return Health.down()
-                    .withDetail("Unexpected exception", e.getMessage())
+                    .withDetail("Error connecting to docker", errorMessage)
                     .build();
         }
-    }
-
-    private boolean isDockerConnectionError(RuntimeException e) {
-        return e.getCause() instanceof SocketException;
     }
 }

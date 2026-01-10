@@ -4,12 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.StandardProtocolFamily;
+import java.net.UnixDomainSocketAddress;
+import java.nio.channels.ServerSocketChannel;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -40,132 +44,101 @@ class DockerConnectionFailureIT {
         this.restTemplate.setErrorHandler(response -> false);
     }
 
-    protected @NotNull String createURLWithPort(String uri) {
-        return "http://localhost:" + port + uri;
-    }
-
-    @DynamicPropertySource
-    static void configureProperties(@NotNull DynamicPropertyRegistry registry) {
-        try {
-            // Create a dummy file path for the Unix socket
-            socketFile = File.createTempFile("docker-failure-test", ".sock");
-            socketFile.delete(); // Ensure it starts non-existent
-
-            // Point porthole.docker.host to this file path
-            registry.add("porthole.docker.host", () -> "unix://" + socketFile.getAbsolutePath());
-
-            // Dummy registry properties to satisfy startup requirements
-            registry.add("registry.urls.registry", () -> "http://localhost:9999/v2/");
-            registry.add("registry.urls.auth", () -> "http://localhost:9999/auth");
-            registry.add("registry.urls.repositories", () -> "http://localhost:9999/v2/repositories/");
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to setup socket file path", e);
-        }
-    }
-
-    @AfterAll
-    static void cleanup() {
+    @AfterEach
+    void cleanup() {
         if (socketFile != null && socketFile.exists()) {
             socketFile.delete();
         }
     }
 
-    // --- Helpers ---
+    @DynamicPropertySource
+    static void configureProperties(@NotNull DynamicPropertyRegistry registry) {
+        try {
+            socketFile = File.createTempFile("docker-failure-test", ".sock");
 
-    private void ensureSocketMissing() {
-        if (socketFile.exists()) {
-            socketFile.delete();
+            registry.add("porthole.docker.host", () -> "unix://" + socketFile.getAbsolutePath());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to setup socket file path", e);
         }
     }
-
-    private void ensureSocketPermissionDenied() throws IOException {
-        if (!socketFile.exists()) {
-            socketFile.createNewFile();
-        }
-        Set<PosixFilePermission> perms = new HashSet<>(); // Empty set = 000 permissions
-        Files.setPosixFilePermissions(socketFile.toPath(), perms);
-    }
-
-    // --- Health Endpoint Tests ---
 
     @Test
-    void health_ShouldReturnDown_WhenSocketMissing() {
-        ensureSocketMissing();
-
-        ResponseEntity<String> response =
-                restTemplate.getForEntity(createURLWithPort("/actuator/health"), String.class);
+    void ShouldReturnDownWhenSocketMissingOnHealth() {
+        ResponseEntity<HealthResponse> response =
+                restTemplate.getForEntity(createURLWithPort("/actuator/health/docker"), HealthResponse.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-        assertThat(response.getBody()).contains("\"status\":\"DOWN\"");
-        assertThat(response.getBody()).contains("\"docker\":{\"status\":\"DOWN\"}");
+        HealthResponse health = response.getBody();
+        assertThat(health).isNotNull();
+        assertThat(health.status()).isEqualTo("DOWN");
+        assertThat(health.details()).containsEntry("Error connecting to docker", "No such file or directory");
     }
 
     @Test
-    void health_ShouldReturnDown_WhenPermissionDenied() throws IOException {
-        try {
-            ensureSocketPermissionDenied();
+    void shouldReturn502WhenSocketMissingOnContainers() {
+        ResponseEntity<String> response = restTemplate.getForEntity(createURLWithPort("/api/containers"), String.class);
 
-            ResponseEntity<String> response =
-                    restTemplate.getForEntity(createURLWithPort("/actuator/health"), String.class);
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-            assertThat(response.getBody()).contains("\"status\":\"DOWN\"");
-            assertThat(response.getBody()).contains("\"docker\":{\"status\":\"DOWN\"}");
-        } finally {
-            ensureSocketMissing(); // Cleanup
-        }
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
     }
 
-    // --- Containers Endpoint Tests ---
+    @Test
+    void shouldReturn502WhenSocketMissingOnVersion() {
+        String containerId = "random-id";
+        ResponseEntity<String> response = restTemplate.getForEntity(
+                createURLWithPort("/api/containers/" + containerId + "/version"), String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
+    }
 
     @Test
-    void containers_ShouldReturn500_WhenSocketMissing() {
-        ensureSocketMissing();
+    void shouldReturnDownWhenPermissionDeniedOnHealth() throws IOException {
+        ensureSocketPermissionDenied();
+
+        ResponseEntity<HealthResponse> response =
+                restTemplate.getForEntity(createURLWithPort("/actuator/health/docker"), HealthResponse.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        HealthResponse health = response.getBody();
+        assertThat(health).isNotNull();
+        assertThat(health.status()).isEqualTo("DOWN");
+        assertThat(health.details()).containsEntry("Error connecting to docker", "Permission denied");
+    }
+
+    @Test
+    void shouldReturn502WhenPermissionDeniedOnContainers() throws IOException {
+
+        ensureSocketPermissionDenied();
 
         ResponseEntity<String> response = restTemplate.getForEntity(createURLWithPort("/api/containers"), String.class);
 
-        assertThat(response.getStatusCode().is5xxServerError()).isTrue();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
     }
 
     @Test
-    void containers_ShouldReturn500_WhenPermissionDenied() throws IOException {
-        try {
-            ensureSocketPermissionDenied();
+    void shouldReturn502WhenPermissionDeniedOnVersion() throws IOException {
 
-            ResponseEntity<String> response =
-                    restTemplate.getForEntity(createURLWithPort("/api/containers"), String.class);
-
-            assertThat(response.getStatusCode().is5xxServerError()).isTrue();
-        } finally {
-            ensureSocketMissing(); // Cleanup
-        }
-    }
-
-    // --- Version Endpoint Tests ---
-
-    @Test
-    void version_ShouldReturn500_WhenSocketMissing() {
-        ensureSocketMissing();
+        ensureSocketPermissionDenied();
 
         String containerId = "random-id";
         ResponseEntity<String> response = restTemplate.getForEntity(
                 createURLWithPort("/api/containers/" + containerId + "/version"), String.class);
 
-        assertThat(response.getStatusCode().is5xxServerError()).isTrue();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
     }
 
-    @Test
-    void version_ShouldReturn500_WhenPermissionDenied() throws IOException {
-        try {
-            ensureSocketPermissionDenied();
-
-            String containerId = "random-id";
-            ResponseEntity<String> response = restTemplate.getForEntity(
-                    createURLWithPort("/api/containers/" + containerId + "/version"), String.class);
-
-            assertThat(response.getStatusCode().is5xxServerError()).isTrue();
-        } finally {
-            ensureSocketMissing(); // Cleanup
-        }
+    private @NotNull String createURLWithPort(String uri) {
+        return "http://localhost:" + port + uri;
     }
+
+    private void ensureSocketPermissionDenied() throws IOException {
+        UnixDomainSocketAddress address = UnixDomainSocketAddress.of(socketFile.toPath());
+        ServerSocketChannel serverChannel = ServerSocketChannel.open(StandardProtocolFamily.UNIX);
+        serverChannel.bind(address);
+        serverChannel.close();
+
+        Set<PosixFilePermission> perms = new HashSet<>();
+        Files.setPosixFilePermissions(socketFile.toPath(), perms);
+    }
+
+    record HealthResponse(String status, Map<String, Object> details) {}
 }

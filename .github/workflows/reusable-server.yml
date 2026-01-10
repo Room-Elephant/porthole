@@ -75,6 +75,10 @@ jobs:
           DOCKER_CACHE_PATH: ${{ github.workspace }}/docker-cache
         run: mvn -B -ntp verify -Pintegration-tests -Dspotless.check.skip=true
 
+      - name: Fix cache permissions
+        if: always()
+        run: sudo chown -R $USER:$USER docker-cache
+
       - name: Publish integration test results
         if: always()
         uses: EnricoMi/publish-unit-test-result-action@v2
