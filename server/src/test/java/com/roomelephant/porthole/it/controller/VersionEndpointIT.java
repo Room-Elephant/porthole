@@ -23,7 +23,6 @@ class VersionEndpointIT extends IntegrationTestBase {
     void shouldReturnUpdateAvailableWhenNewerVersionExists() {
         stubAuth();
         stubRegistryTags("busybox", "1.37.0-uclibc", "1.38.1");
-        // Digest for new version 1.38.1 is not fetched because tag comparison is enough
         stubManifestDigest("busybox", "1.37.0-uclibc", "sha256:currentdiggest");
 
         VersionDTO response = fetchVersion(testAppContainer.getContainerId());
@@ -113,6 +112,25 @@ class VersionEndpointIT extends IntegrationTestBase {
                         .withBody("{\"token\":\"mock-token\"}")));
     }
 
+    void stubRegistryTags404(String image) {
+        wireMock.stubFor(get(urlEqualTo("/v2/repositories/library/" + image + "/tags?page_size=100"))
+                .willReturn(aResponse().withStatus(404)));
+    }
+
+    void stubManifest404(String image, String version) {
+        wireMock.stubFor(head(urlMatching("/v2/library/" + image + "/manifests/" + version))
+                .willReturn(aResponse().withStatus(404)));
+    }
+
+    protected @NotNull VersionDTO fetchVersion(String containerId) {
+        ResponseEntity<VersionDTO> response = fetch("/api/containers/" + containerId + "/version", VersionDTO.class);
+        assertThat(response.getStatusCode()).isEqualTo(OK);
+
+        assertThat(response.getBody()).isNotNull();
+
+        return response.getBody();
+    }
+
     /**
      * Stub Docker registry tags endpoint with given versions
      *
@@ -136,16 +154,6 @@ class VersionEndpointIT extends IntegrationTestBase {
                         .withBody(tagsJson.toString())));
     }
 
-    void stubRegistryTags404(String image) {
-        wireMock.stubFor(get(urlEqualTo("/v2/repositories/library/" + image + "/tags?page_size=100"))
-                .willReturn(aResponse().withStatus(404)));
-    }
-
-    void stubManifest404(String image, String version) {
-        wireMock.stubFor(head(urlMatching("/v2/library/" + image + "/manifests/" + version))
-                .willReturn(aResponse().withStatus(404)));
-    }
-
     /**
      * Stub Docker registry manifest HEAD request with digest
      *
@@ -159,14 +167,5 @@ class VersionEndpointIT extends IntegrationTestBase {
                         .withHeader("Content-Type", "application/vnd.docker.distribution.manifest.v2+json")
                         .withHeader("Docker-Content-Digest", digest)
                         .withBody("{}")));
-    }
-
-    protected @NotNull VersionDTO fetchVersion(String containerId) {
-        ResponseEntity<VersionDTO> response = fetch("/api/containers/" + containerId + "/version", VersionDTO.class);
-        assertThat(response.getStatusCode()).isEqualTo(OK);
-
-        assertThat(response.getBody()).isNotNull();
-
-        return response.getBody();
     }
 }
