@@ -77,7 +77,11 @@ jobs:
 
       - name: Fix cache permissions
         if: always()
-        run: sudo chown -R $USER:$USER docker-cache
+        run: |
+          if [ -d "docker-cache" ]; then
+            sudo chown -R $USER:$USER docker-cache
+            sudo chmod -R a+rX docker-cache
+          fi
 
       - name: Publish integration test results
         if: always()
