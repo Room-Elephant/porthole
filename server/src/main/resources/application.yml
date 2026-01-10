@@ -18,10 +18,11 @@ spring:
   banner.location: classpath:/banner.txt
 
 # Docker configuration
-docker:
-  host: unix:///var/run/docker.sock
-  connection-timeout: 5s
-  response-timeout: 60s
+porthole:
+  docker:
+    host: unix:///var/run/docker.sock
+    connection-timeout: 5s
+    response-timeout: 60s
 
 # Icon configuration
 dashboard:
@@ -51,5 +52,5 @@ management:
         include: health
   endpoint:
     health:
-      show-details: never
+      show-details: always
       show-components: always

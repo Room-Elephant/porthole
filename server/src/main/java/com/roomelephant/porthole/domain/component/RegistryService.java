@@ -6,7 +6,6 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.roomelephant.porthole.config.properties.RegistryProperties;
 import com.roomelephant.porthole.domain.util.ImageUtils;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +14,7 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 @Service
@@ -27,7 +27,6 @@ public class RegistryService {
     private static final String DOCKER_CONTENT_DIGEST = "Docker-Content-Digest";
     private static final String RESULTS = "results";
     private static final String NAME = "name";
-    private static final Duration TOKEN_TTL = Duration.ofMinutes(4); // Docker tokens expire after 5 min
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
@@ -43,8 +42,10 @@ public class RegistryService {
                 .expireAfterWrite(registryProperties.cache().ttl())
                 .maximumSize(registryProperties.cache().versionMaxSize())
                 .build();
-        this.tokenCache =
-                Caffeine.newBuilder().expireAfterWrite(TOKEN_TTL).maximumSize(1).build();
+        this.tokenCache = Caffeine.newBuilder()
+                .expireAfterWrite(registryProperties.cache().ttl())
+                .maximumSize(1)
+                .build();
     }
 
     public @Nullable String getDigest(@NonNull String imageName, String tag) {
@@ -134,6 +135,8 @@ public class RegistryService {
             }
 
             return tags.getLast();
+        } catch (HttpClientErrorException.NotFound e) {
+            return null;
         } catch (Exception e) {
             log.error("Error in fetchLatestFromHub", e);
             return null;
